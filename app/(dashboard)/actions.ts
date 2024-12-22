@@ -1,6 +1,6 @@
 'use server';
 
-import { deleteProductById } from '@/lib/db';
+import { deleteProductById } from 'db/schema';
 import { revalidatePath } from 'next/cache';
 
 export async function deleteProduct(formData: FormData) {
