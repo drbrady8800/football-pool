@@ -36,7 +36,7 @@ export function isFirstPlace(standing: Standing, standings: Standing[]): boolean
 }
 
 export function getApiUrl(): string {
-  let baseUrl = process.env.VERCEL_URL;
+  let baseUrl = process.env.NEXT_PUBLIC_VERCEL_ENV;
   if (baseUrl && !baseUrl.startsWith('http')) {
     baseUrl = `https://${baseUrl}`;
   }

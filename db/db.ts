@@ -6,7 +6,7 @@ import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
 const getDb = () => {
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.VERCEL_ENV === "development") {
     const { drizzle } = require("drizzle-orm/node-postgres");
     const { Pool } = require("pg");
 
