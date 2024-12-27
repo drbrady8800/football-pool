@@ -4,6 +4,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "deploy": "node -r ts-node/register migrations.ts",
     "prettier": "prettier . --write",
     "db:run": "./scripts/docker-db.sh",
     "db:generate": "drizzle-kit generate --dialect postgresql",
