@@ -1,7 +1,7 @@
 import { type GameWithTeams } from '@/db/types';
 
 export async function fetchGames(): Promise<GameWithTeams[]> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/games`, {
+  const response = await fetch(`${process.env.VERCEL_URL}/api/games`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -17,7 +17,7 @@ export async function fetchGames(): Promise<GameWithTeams[]> {
 }
 
 export async function fetchGameById(id: string): Promise<GameWithTeams> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/games/${id}`, {
+  const response = await fetch(`${process.env.VERCEL_URL}/api/games/${id}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

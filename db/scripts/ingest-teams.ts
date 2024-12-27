@@ -46,7 +46,7 @@ async function fetchTeams(): Promise<TeamApiResponse[]> {
     {
       headers: {
         'accept': 'application/json',
-        'Authorization': `Bearer ${process.env.COLLEGE_FOOTBALL_DATA_API_KEY}`
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_COLLEGE_FOOTBALL_DATA_API_KEY}`
       }
     }
   );

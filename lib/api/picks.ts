@@ -16,7 +16,7 @@ export async function fetchPicks(options: FetchPicksOptions): Promise<PickWithGa
   });
 
   const queryString = searchParams.toString();
-  const requestUrl = `${process.env.NEXT_PUBLIC_API_URL}/picks${queryString ? `?${queryString}` : ''}`;
+  const requestUrl = `${process.env.VERCEL_URL}/api/picks${queryString ? `?${queryString}` : ''}`;
   
   const response = await fetch(requestUrl, {
     method: 'GET',
