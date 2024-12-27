@@ -2,8 +2,8 @@ import { NextRequest } from "next/server";
 import { eq, and } from "drizzle-orm";
 
 import db from "@/db/db";
-
 import picks from "@/db/schema/picks";
+import { ingestPicks } from "@/db/scripts/ingest-picks";
 import { getBowlYear } from "@/lib/utils";
 
 export const dynamic = 'force-dynamic';
@@ -41,6 +41,42 @@ export async function GET(request: NextRequest) {
     
     return Response.json(
       { picks: result },
+      { status: 200 }
+    );
+    
+  } catch (error) {
+    return Response.json(
+      { 
+        error: 'Pick ingestion failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const year = getBowlYear();
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    
+    if (!file) {
+      return Response.json(
+        { 
+          error: 'File upload failed',
+          details: 'No file was provided'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Convert the file to text
+    const text = await file.text();
+    const message = await ingestPicks({ year: year, csvContent: text });
+    
+    return Response.json(
+      { message },
       { status: 200 }
     );
     
