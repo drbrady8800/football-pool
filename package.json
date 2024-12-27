@@ -11,11 +11,15 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.4",
+    "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-dropdown-menu": "^2.1.1",
+    "@radix-ui/react-select": "^2.1.4",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.0",
+    "@radix-ui/react-toast": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.1.2",
+    "@types/lodash": "^4.17.13",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
@@ -24,17 +28,22 @@
     "autoprefixer": "^10.4.16",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
+    "csv-parse": "^5.6.0",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.31.4",
     "drizzle-zod": "^0.5.1",
-    "lucide-react": "^0.300.0",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.469.0",
     "next": "^14.0.4",
     "next-auth": "^5.0.0-beta",
+    "node-fetch": "^3.3.2",
     "postcss": "^8.4.32",
     "prettier": "^3.1.1",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "recharts": "^2.15.0",
     "server-only": "^0.0.1",
     "tailwind-merge": "^2.2.0",
     "tailwindcss": "^3.4.0",
@@ -51,6 +60,7 @@
   "devDependencies": {
     "@types/pg": "^8.11.10",
     "drizzle-kit": "^0.22.8",
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "shadcn": "^2.1.8"
   }
 }

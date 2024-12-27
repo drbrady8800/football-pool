@@ -1,27 +1,27 @@
 import 'server-only';
 
-import { pgEnum } from 'drizzle-orm/pg-core';
+import schema from '@/db/schema';
 import * as dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
 
 const getDb = () => {
   if (process.env.NODE_ENV === "development") {
-    const drizzleNodePostgres = require("drizzle-orm/node-postgres");
-    const pg = require("pg");
+    const { drizzle } = require("drizzle-orm/node-postgres");
+    const { Pool } = require("pg");
 
-    const pool = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
+    const pool = new Pool({
+      connectionString: process.env.POSTGRES_URL
     });
-    return drizzleNodePostgres.drizzle({ client: pool });
+    return drizzle(pool, { schema });
   } else {
-    const vercelPostgres = require("@vercel/postgres");
-    const drizzleVercelPostgres = require("drizzle-orm/vercel-postgres");
+    const { sql } = require("@vercel/postgres");
+    const { drizzle } = require("drizzle-orm/vercel-postgres");
 
-    return drizzleVercelPostgres.drizzle(vercelPostgres.sql);
+    return drizzle(sql, { schema });
   }
 }
 
-export const db = getDb();
+const db = getDb();
 
-export const statusEnum = pgEnum('status', ['active', 'inactive', 'archived']);
+export default db;

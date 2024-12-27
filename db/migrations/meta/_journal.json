@@ -8,6 +8,41 @@
       "when": 1734847556831,
       "tag": "0000_heavy_killmonger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1734908480157,
+      "tag": "0001_public_may_parker",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1734929083569,
+      "tag": "0002_cooing_black_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1735257391111,
+      "tag": "0003_pink_shiva",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1735257833359,
+      "tag": "0004_long_dagger",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1735284963253,
+      "tag": "0005_bumpy_blacklash",
+      "breakpoints": true
     }
   ]
 }

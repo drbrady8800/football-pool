@@ -1,6 +1,6 @@
 'use server';
 
-import { deleteProductById } from 'db/schema';
+// TODO MOVE LIB STUFF HERE?
 import { revalidatePath } from 'next/cache';
 
 export async function deleteProduct(formData: FormData) {
