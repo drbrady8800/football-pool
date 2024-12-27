@@ -1,6 +1,7 @@
 import { type GameWithTeams } from '@/db/types';
 
 export async function fetchGames(): Promise<GameWithTeams[]> {
+  console.log(process.env.VERCEL_URL)
   const response = await fetch(`${process.env.VERCEL_URL}/api/games`, {
     method: 'GET',
     headers: {
