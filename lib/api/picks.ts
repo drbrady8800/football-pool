@@ -17,7 +17,7 @@ export async function fetchPicks(options: FetchPicksOptions): Promise<PickWithGa
   });
 
   const queryString = searchParams.toString();
-  const requestUrl = `${getApiUrl()}/api/picks${queryString ? `?${queryString}` : ''}`;
+  const requestUrl = `${getApiUrl()}/picks${queryString ? `?${queryString}` : ''}`;
   
   const response = await fetch(requestUrl, {
     method: 'GET',

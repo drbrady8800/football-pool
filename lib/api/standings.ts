@@ -2,7 +2,7 @@ import { type Standing } from "@/lib/types";
 import { getApiUrl } from '@/lib/utils';
 
 export async function fetchStandings({ numGames }: { numGames?: number }): Promise<Standing[]> {
-  const response = await fetch(`${getApiUrl()}/api/standings${numGames ? `?numGames=${numGames}` : ''}`, {
+  const response = await fetch(`${getApiUrl()}/standings${numGames ? `?numGames=${numGames}` : ''}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

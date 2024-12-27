@@ -3,7 +3,7 @@ import { getApiUrl } from '@/lib/utils';
 
 export async function fetchGames(): Promise<GameWithTeams[]> {
   console.log(getApiUrl())
-  const response = await fetch(`${getApiUrl()}/api/games`, {
+  const response = await fetch(`${getApiUrl()}/games`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -19,7 +19,7 @@ export async function fetchGames(): Promise<GameWithTeams[]> {
 }
 
 export async function fetchGameById(id: string): Promise<GameWithTeams> {
-  const response = await fetch(`${getApiUrl()}/api/games/${id}`, {
+  const response = await fetch(`${getApiUrl()}/games/${id}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
