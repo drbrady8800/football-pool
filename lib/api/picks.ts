@@ -1,4 +1,5 @@
 import { type PickWithGameTeamUser } from '@/db/types';
+import { getApiUrl } from '@/lib/utils';
 
 interface FetchPicksOptions {
   gameId?: string;
@@ -16,7 +17,7 @@ export async function fetchPicks(options: FetchPicksOptions): Promise<PickWithGa
   });
 
   const queryString = searchParams.toString();
-  const requestUrl = `${process.env.VERCEL_URL}/api/picks${queryString ? `?${queryString}` : ''}`;
+  const requestUrl = `${getApiUrl()}/api/picks${queryString ? `?${queryString}` : ''}`;
   
   const response = await fetch(requestUrl, {
     method: 'GET',

@@ -34,3 +34,11 @@ export function isFirstPlace(standing: Standing, standings: Standing[]): boolean
   const highestPoints = Math.max(...standings.map(s => s.points))
   return standing.points === highestPoints;
 }
+
+export function getApiUrl(): string {
+  let baseUrl = process.env.VERCEL_URL;
+  if (baseUrl && !baseUrl.startsWith('http')) {
+    baseUrl = `https://${baseUrl}`;
+  }
+  return baseUrl ? `${baseUrl}/api` : 'http://localhost:3000/api';
+}
