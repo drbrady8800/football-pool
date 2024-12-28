@@ -36,7 +36,8 @@ export function isFirstPlace(standing: Standing, standings: Standing[]): boolean
 }
 
 export function getApiUrl(): string {
-  let baseUrl = "https://football-pool-rho.vercel.app";
+  let baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL;
+  console.log("BASE", baseUrl)
   if (baseUrl && !baseUrl.startsWith('http')) {
     baseUrl = `https://${baseUrl}`;
   }

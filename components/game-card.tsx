@@ -51,7 +51,7 @@ const GameCard = ({ game, isHeader, selectedTeamId }: GameCardProps) => {
       if (isSelectedTeam) {
         return defaultGradient;
       }
-      return `linear-gradient(${direction}, #808080 0%, #808080 30%, transparent 70%)`;
+      return `linear-gradient(${direction}, #FFFFFF 0%, #FFFFFF 30%, transparent 70%)`;
     }
 
     // Game complete - show outcome gradients
@@ -67,7 +67,7 @@ const GameCard = ({ game, isHeader, selectedTeamId }: GameCardProps) => {
       if (isSelectedTeamLoser && team.id === game.winningTeamId) {
         return defaultGradient;
       }
-      return `linear-gradient(${direction}, #808080 0%, #808080 30%, transparent 70%)`;
+      return `linear-gradient(${direction}, #FFFFFF 0%, #FFFFFF 30%, transparent 70%)`;
     }
 
     return defaultGradient;

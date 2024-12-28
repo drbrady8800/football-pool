@@ -2,7 +2,6 @@ import { type GameWithTeams } from '@/db/types';
 import { getApiUrl } from '@/lib/utils';
 
 export async function fetchGames(): Promise<GameWithTeams[]> {
-  console.log(getApiUrl())
   const response = await fetch(`${getApiUrl()}/games`, {
     method: 'GET',
     headers: {

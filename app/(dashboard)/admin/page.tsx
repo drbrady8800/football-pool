@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { getApiUrl } from '@/lib/utils';
 
 interface IngestDataProps {
   method: string;
@@ -29,9 +30,12 @@ const ingestData = async ({method, endpoint, setIsLoading, toast, file}: IngestD
       formData.append('file', file);
     }
 
-    const response = await fetch(endpoint, {
+    const response = await fetch(`${getApiUrl()}/${endpoint}`, {
       method,
       body: file ? formData : undefined,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
     const responseJson = await response.json();
 
