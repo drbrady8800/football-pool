@@ -1,4 +1,4 @@
-import { type Standing } from "@/lib/types";
+import { type Standing, type StandingChartColumn } from "@/lib/types";
 import { getApiUrl } from '@/lib/utils';
 
 export async function fetchStandings({ numGames }: { numGames?: number }): Promise<Standing[]> {
@@ -15,4 +15,20 @@ export async function fetchStandings({ numGames }: { numGames?: number }): Promi
 
   const data = await response.json();
   return data["standings"];
+}
+
+export async function fetchStandingsChartData(): Promise<StandingChartColumn[]> {
+  const response = await fetch(`${getApiUrl()}/standings/all`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch games');
+  }
+
+  const data = await response.json();
+  return data;
 }

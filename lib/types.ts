@@ -6,3 +6,8 @@ export type Standing = {
   accuracy: number;
   points: number;
 }
+
+export type StandingChartColumn = {
+  game: string;
+  [key: string]: string | number; // User IDs as keys with their points
+};

@@ -42,11 +42,11 @@ const navItems: Array<NavItemInfo> = [
     label: 'Games',
     href: '/games'
   },
-  // {
-  //   icon: <LineChart className="h-5 w-5" />,
-  //   label: 'Stats',
-  //   href: '/stats'
-  // },
+  {
+    icon: <LineChart className="h-5 w-5" />,
+    label: 'Trends',
+    href: '/trends'
+  },
   // {
   //   icon: <TrendingUpDown className="h-5 w-5" />,
   //   label: 'Projections',

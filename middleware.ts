@@ -37,7 +37,7 @@ const corsOptions = {
 
 function getAllowedOrigins() {
   if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'development') {
-    return ['http://localhost:3000', 'http://localhost:3000/']
+    return ['http://localhost:3000']
   }
   
   return [
@@ -58,9 +58,6 @@ async function apiMiddleware(request: NextRequest) {
  
   // Handle preflighted requests
   const isPreflight = request.method === 'OPTIONS'
-
-  console.log(`isAllowedOrigin ${request.url.toString()}`, isAllowedOrigin, isSameOrigin, origin, host, allowedOrigins, isPreflight)
-
  
   if (isPreflight) {
     const preflightHeaders = {
