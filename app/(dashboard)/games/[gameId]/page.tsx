@@ -8,6 +8,7 @@ import { fetchGameById } from '@/lib/api/games';
 import { fetchPicks } from '@/lib/api/picks';
 import GameCard from '@/components/game-card';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { type GameWithTeams, type PickWithGameTeamUser } from '@/db/types';
 import { toast } from '@/hooks/use-toast';
 
@@ -56,22 +57,23 @@ export default function GameIdPage({
       <div className="w-full max-w-4xl mx-auto px-4">
         <Card>
           <CardContent className="p-8">
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-1/3" />
-              <div className="h-24 bg-gray-200 rounded" />
+            <div className="space-y-4">
+              <Skeleton className="h-32 w-full mb-8" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <div className="h-6 bg-gray-200 rounded w-1/2" />
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="h-8 bg-gray-200 rounded" />
-                    <div className="h-8 bg-gray-200 rounded" />
+                <div className="space-y-4">
+                  <Skeleton className="h-8 w-1/2" />
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    {[...Array(18)].map((_, i) => (
+                      <Skeleton key={`home-${i}`} className="h-6" />
+                    ))}
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="h-6 bg-gray-200 rounded w-1/2" />
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="h-8 bg-gray-200 rounded" />
-                    <div className="h-8 bg-gray-200 rounded" />
+                <div className="space-y-4">
+                  <Skeleton className="h-8 w-1/2" />
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    {[...Array(18)].map((_, i) => (
+                      <Skeleton key={`away-${i}`} className="h-6" />
+                    ))}
                   </div>
                 </div>
               </div>

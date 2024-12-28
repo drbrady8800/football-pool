@@ -3,6 +3,7 @@
 import React from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 import { interpolateRainbow } from 'd3-scale-chromatic'
+import { Skeleton } from "@/components/ui/skeleton"
 
 import {
   ChartConfig,
@@ -17,6 +18,65 @@ import { type StandingChartColumn } from "@/lib/types"
 
 interface PointsTrendProps {
   miniture?: boolean;
+}
+
+function ChartSkeleton({ miniture }: { miniture?: boolean }) {
+  return (
+    <div className={`relative w-full ${miniture ? 'md:h-96' : 'h-[600px]'}`}>
+      <div className="absolute inset-0 flex items-end">
+        {/* Y-axis ticks */}
+        <div className="h-full pr-2 flex flex-col justify-between py-6">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={`y-${i}`} className="h-4 w-8" />
+          ))}
+        </div>
+
+        <div className="flex-1 h-full pb-16">
+          {/* Chart area with animated lines */}
+          <div className="relative h-full">
+            {/* Grid lines */}
+            <div className="absolute inset-0 flex flex-col justify-between">
+              {[...Array(5)].map((_, i) => (
+                <div 
+                  key={`grid-${i}`} 
+                  className="w-full border-t border-gray-100"
+                />
+              ))}
+            </div>
+
+            {/* Animated line placeholders */}
+            <div className="absolute inset-0">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={`line-${i}`}
+                  className="absolute inset-x-0 h-0.5 animate-pulse"
+                  style={{
+                    top: `${25 + (i * 15)}%`,
+                    background: `linear-gradient(90deg, 
+                      transparent 0%, 
+                      ${interpolateRainbow(i / 4)} 50%, 
+                      transparent 100%
+                    )`,
+                    opacity: 0.5
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* X-axis ticks */}
+          <div className="absolute bottom-0 w-full flex justify-between px-2">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton 
+                key={`x-${i}`} 
+                className="h-4 w-12 -rotate-45 origin-top-left"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function PointsTrend({ miniture }: PointsTrendProps) {
@@ -90,8 +150,8 @@ export default function PointsTrend({ miniture }: PointsTrendProps) {
             ))}
           </LineChart>
         </ChartContainer>
-      ): (
-        <div className="text-center py-8 text-muted-foreground">Loading...</div>
+      ) : (
+        <ChartSkeleton miniture={miniture} />
       )}
     </>
   )

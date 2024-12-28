@@ -2,7 +2,7 @@
 import React from 'react';
 
 import { GameWithTeams } from '@/db/types';
-import GameCard from '@/components/game-card';
+import GameCard, { GameCardSkeleton } from '@/components/game-card';
 import CarderHeaderWithLink from './card-header-link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -13,8 +13,17 @@ interface GamesListProps {
   href?: string;
 }
 
-export default function GamesList({ games, isLoading, title, href }: GamesListProps) {
+function GamesListSkeleton() {
+  return (
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
+      {[...Array(6)].map((_, index) => (
+        <GameCardSkeleton key={index} />
+      ))}
+    </div>
+  );
+}
 
+export default function GamesList({ games, isLoading, title, href }: GamesListProps) {
   return (
     <div className="w-full mx-auto space-y-8">
       <Card>
@@ -26,10 +35,8 @@ export default function GamesList({ games, isLoading, title, href }: GamesListPr
           </CardHeader>
         )}
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading...</div>
-          ) : games.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">No games available</div>
+          {isLoading || games.length === 0 ? (
+            <GamesListSkeleton />
           ) : (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
               {games

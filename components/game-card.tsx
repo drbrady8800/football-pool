@@ -3,6 +3,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, X, ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from "@/components/ui/skeleton";
 import { format } from 'date-fns';
 import { type GameWithTeams, type Team } from '@/db/types';
 
@@ -25,7 +26,7 @@ interface GameCardProps {
   selectedTeamId?: string;
 }
 
-const GameCard = ({ game, isHeader, selectedTeamId }: GameCardProps) => {
+export default function GameCard({ game, isHeader, selectedTeamId }: GameCardProps) {
   const { homeTeam, awayTeam, gameDate, homeTeamScore, awayTeamScore, isComplete } = game;
   const computedHomeTeam = homeTeam ?? genericTeam;
   const computedAwayTeam = awayTeam ?? genericTeam;
@@ -212,4 +213,48 @@ const GameCard = ({ game, isHeader, selectedTeamId }: GameCardProps) => {
   );
 };
 
-export default GameCard;
+export function GameCardSkeleton({ isHeader }: { isHeader?: boolean }) {
+  return (
+    <Card 
+      className={`w-full mb-4 relative ${!isHeader ? "max-w-2xl" : ""}`}
+    >
+      <div className="relative flex flex-col md:grid md:grid-cols-12 items-center p-6">
+        <div className="w-full grid grid-cols-2 md:col-span-12 md:grid-cols-12 items-center">
+          {/* Home Team */}
+          <div className="col-span-1 md:col-span-4 flex flex-col md:flex-row md:items-center gap-4 z-10">
+            <Skeleton className="w-16 h-16 rounded-full" />
+            <div className="min-w-0 space-y-2">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+
+          {/* Game Info - Desktop */}
+          <div className="hidden md:block md:col-span-4">
+            <div className="flex flex-col items-center justify-center">
+              <Skeleton className="h-4 w-24 mb-2" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+          </div>
+
+          {/* Away Team */}
+          <div className="col-span-1 md:col-span-4 flex flex-col-reverse md:flex-row items-end md:items-center justify-end gap-4 z-10">
+            <div className="text-right min-w-0 space-y-2">
+              <Skeleton className="h-6 w-32 ml-auto" />
+              <Skeleton className="h-4 w-24 ml-auto" />
+            </div>
+            <Skeleton className="w-16 h-16 rounded-full" />
+          </div>
+        </div>
+
+        {/* Game Info - Mobile */}
+        <div className="w-full mt-4 md:hidden">
+          <div className="flex flex-col items-center justify-center">
+            <Skeleton className="h-4 w-24 mb-2" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
