@@ -1,27 +1,99 @@
+"use client"
+
+import React from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+
 import { fetchGameById } from '@/lib/api/games';
 import { fetchPicks } from '@/lib/api/picks';
 import GameCard from '@/components/game-card';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import { type GameWithTeams, type PickWithGameTeamUser } from '@/db/types';
+import { toast } from '@/hooks/use-toast';
 
-export default async function GameIdPage({
+export default function GameIdPage({
   params,
 }: {
   params: { gameId: string };
 }) {
-  const gameId = params.gameId;
-  const game = await fetchGameById(gameId);
-  const picksForGame = await fetchPicks({ gameId });
-  
-  const homeTeamPicks = picksForGame.filter(pick => pick.selectedTeamId === game.homeTeam.id);
-  const awayTeamPicks = picksForGame.filter(pick => pick.selectedTeamId === game.awayTeam.id);
-  
+  const [game, setGame] = React.useState<GameWithTeams | null>(null);
+  const [picks, setPicks] = React.useState<PickWithGameTeamUser[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [gameData, picksData] = await Promise.all([
+          fetchGameById(params.gameId),
+          fetchPicks({ gameId: params.gameId })
+        ]);
+        setGame(gameData);
+        setPicks(picksData);
+      } catch (error) {
+        if (error instanceof Error) {
+          toast({ 
+            title: 'Error fetching game data:', 
+            description: error.message, 
+            variant: 'destructive' 
+          });
+        } else {
+          toast({ 
+            title: 'Error fetching game data', 
+            variant: 'destructive' 
+          });
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [params.gameId]);
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto px-4">
+        <Card>
+          <CardContent className="p-8">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 rounded w-1/3" />
+              <div className="h-24 bg-gray-200 rounded" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <div className="h-6 bg-gray-200 rounded w-1/2" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="h-8 bg-gray-200 rounded" />
+                    <div className="h-8 bg-gray-200 rounded" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-6 bg-gray-200 rounded w-1/2" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="h-8 bg-gray-200 rounded" />
+                    <div className="h-8 bg-gray-200 rounded" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!game) {
+    return null;
+  }
+
+  const homeTeamPicks = picks.filter(pick => pick.selectedTeamId === game.homeTeam.id);
+  const awayTeamPicks = picks.filter(pick => pick.selectedTeamId === game.awayTeam.id);
+
   return (
     <div className="w-full max-w-4xl mx-auto px-4 space-y-8">
       <Card>
         <CardHeader className="pb-0">
-          <GameCard game={game} isHeader={true}/>
+          <GameCard game={game} isHeader={true} />
         </CardHeader>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

@@ -26,8 +26,7 @@ export async function fetchGameById(id: string): Promise<GameWithTeams> {
   });
 
   if (!response.ok) {
-    const result = await response.json();
-    console.error('Failed to fetch game:', result);
+    console.error('Failed to fetch game:', response.body);
     throw new Error('Failed to fetch game');
   }
 
