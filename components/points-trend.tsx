@@ -76,6 +76,7 @@ export default function PointsTrend({ miniture }: PointsTrendProps) {
               itemSorter={(item) => {
                 return Number(item.value)
               }}
+              wrapperStyle={{ zIndex: 100 }}
             />
             {Object.entries(chartConfig).map(([userId, { label, color }]) => (
               <Line

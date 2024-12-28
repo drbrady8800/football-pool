@@ -36,8 +36,11 @@ export function isFirstPlace(standing: Standing, standings: Standing[]): boolean
 }
 
 export function getApiUrl(): string {
-  let baseUrl = window ? window.location.origin : process.env.NEXT_PUBLIC_VERCEL_URL;
-  console.log("YEP", baseUrl, window.location.origin);
+  let baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL;
+  if (typeof window !== 'undefined') {
+    baseUrl = window?.location?.origin;
+  }
+  
   if (baseUrl && !baseUrl.startsWith('http')) {
     baseUrl = `https://${baseUrl}`;
   }

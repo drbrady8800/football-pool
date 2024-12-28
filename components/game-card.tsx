@@ -60,13 +60,9 @@ const GameCard = ({ game, isHeader, selectedTeamId }: GameCardProps) => {
         return `linear-gradient(${direction}, #22C55E 0%, #22C55E 30%, transparent 70%)`; // Green for win
       }
       if (isSelectedTeamLoser) {
-        return `linear-gradient(${direction}, #EF4444 0%, #EF4444 30%, transparent 70%)`; // Red for loss
+        return `linear-gradient(${direction}, #E41B17 0%, #E41B17 30%, transparent 70%)`; // Red for loss
       }
     } else {
-      // Non-selected team should be grayed out unless they won against selected team
-      if (isSelectedTeamLoser && team.id === game.winningTeamId) {
-        return defaultGradient;
-      }
       return `linear-gradient(${direction}, #FFFFFF 0%, #FFFFFF 30%, transparent 70%)`;
     }
 
