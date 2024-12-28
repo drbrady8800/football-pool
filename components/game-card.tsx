@@ -27,8 +27,8 @@ interface GameCardProps {
 
 const GameCard = ({ game, isHeader, selectedTeamId }: GameCardProps) => {
   const { homeTeam, awayTeam, gameDate, homeTeamScore, awayTeamScore, isComplete } = game;
-  const computedHomeTeam = homeTeam || genericTeam;
-  const computedAwayTeam = awayTeam || genericTeam;
+  const computedHomeTeam = homeTeam ?? genericTeam;
+  const computedAwayTeam = awayTeam ?? genericTeam;
   const router = useRouter();
 
   const isSelectedTeamWinner = isComplete && selectedTeamId && selectedTeamId === game.winningTeamId;
@@ -38,8 +38,8 @@ const GameCard = ({ game, isHeader, selectedTeamId }: GameCardProps) => {
   const getTeamGradient = (team: Team, isHome: boolean) => {
     const direction = isHome ? '135deg' : '-45deg';
     const defaultGradient = isHome
-      ? `linear-gradient(${direction}, ${team.primaryColor} 0%, ${team.primaryColor} 30%, transparent 70%)`
-      : `linear-gradient(${direction}, ${team.primaryColor} 0%, ${team.primaryColor} 30%, transparent 70%)`;
+      ? `linear-gradient(${direction}, ${team.primaryColor} 0%, ${homeTeam ? team.primaryColor : team.secondaryColor} 30%, transparent 70%)`
+      : `linear-gradient(${direction}, ${team.primaryColor} 0%, ${awayTeam ? team.primaryColor : team.secondaryColor} 30%, transparent 70%)`;
     
     // If no selected team, return default gradient
     if (!selectedTeamId) return defaultGradient;

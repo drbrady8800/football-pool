@@ -1,9 +1,36 @@
+"use client"
+import React from 'react';
+
 import { fetchGames } from '@/lib/api/games';
+import { GameWithTeams } from '@/db/types';
 import GameCard from '@/components/game-card';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from '@/hooks/use-toast';
 
-export default async function GamesPage() {
-  const games = await fetchGames();
+export default function GamesPage() {
+  const [games, setGames] = React.useState<Array<GameWithTeams>>([])
+  const [loading, setLoading] = React.useState<boolean>(false)
+
+  // Initial load
+  React.useEffect(() => {
+    const initializeGames = async () => {
+      try {
+        setLoading(true)
+        // Then fetch initial standings
+        const initialGames = await fetchGames()
+        setGames(initialGames)
+      } catch (error) {
+        if (error instanceof Error) {
+          toast({ title: 'Error fetching game:', description: error.message, variant: 'destructive' })
+        } else {
+          toast({ title: 'Error fetching games', variant: 'destructive' })
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    initializeGames()
+  }, [])
   
   // Separate active and completed games
   const activeGames = games.filter(game => !game.isComplete);
@@ -17,17 +44,20 @@ export default async function GamesPage() {
           <CardTitle>Remaining Games</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
-            {activeGames.length > 0 ? (
-              activeGames
+          {loading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          ) : games.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">No games available</div>
+          ) : (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
+              {activeGames
                 .sort((a, b) => a.gameDate < b.gameDate ? -1 : 1)
                 .map(game => (
                   <GameCard game={game} key={game.id} />
                 ))
-            ) : (
-              <p>No active games available at the moment.</p>
-            )}
-          </div>
+              }
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -38,13 +68,20 @@ export default async function GamesPage() {
             <CardTitle>Completed Games</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
-              {completedGames
-                .sort((a, b) => a.gameDate < b.gameDate ? -1 : 1)
-                .map(game => (
-                  <GameCard game={game} key={game.id} />
-                ))}
-            </div>
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">Loading...</div>
+            ) : games.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">No games available</div>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
+                {completedGames
+                  .sort((a, b) => a.gameDate < b.gameDate ? -1 : 1)
+                  .map(game => (
+                    <GameCard game={game} key={game.id} />
+                  ))
+                }
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

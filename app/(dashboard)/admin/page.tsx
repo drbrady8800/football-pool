@@ -75,16 +75,16 @@ export default function AdminPage() {
   };
 
   const ingestTeams = async () => {
-    ingestData({ method: "POST", endpoint: '/api/teams', setIsLoading: setIsIngestTeamsLoading, toast });
+    ingestData({ method: "POST", endpoint: '/teams', setIsLoading: setIsIngestTeamsLoading, toast });
   };
   const updateTeams = async () => {
-    ingestData({ method: "PUT", endpoint: '/api/teams', setIsLoading: setIsUpdateTeamsLoading, toast });
+    ingestData({ method: "PUT", endpoint: '/teams', setIsLoading: setIsUpdateTeamsLoading, toast });
   };
   const ingestGames = async () => {
-    ingestData({ method: "POST", endpoint: '/api/games', setIsLoading: setIsIngestGamesLoading, toast });
+    ingestData({ method: "POST", endpoint: '/games', setIsLoading: setIsIngestGamesLoading, toast });
   };
   const updateGames = async () => {
-    ingestData({ method: "PUT", endpoint: '/api/games', setIsLoading: setIsUpdateGamesLoading, toast });
+    ingestData({ method: "PUT", endpoint: '/games', setIsLoading: setIsUpdateGamesLoading, toast });
   };
   const ingestPicks = async () => {
     if (!selectedFile) {

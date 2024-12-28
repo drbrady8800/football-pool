@@ -58,6 +58,9 @@ async function apiMiddleware(request: NextRequest) {
  
   // Handle preflighted requests
   const isPreflight = request.method === 'OPTIONS'
+
+  console.log(`isAllowedOrigin ${request.url.toString()}`, isAllowedOrigin, isSameOrigin, origin, host, allowedOrigins, isPreflight)
+
  
   if (isPreflight) {
     const preflightHeaders = {
@@ -120,7 +123,6 @@ async function authMiddleware(request: NextRequest) {
  
 export async function middleware(request: NextRequest) {
   // Handle API routes
-  console.log("MIDDLE", request.url.toString())
   if (request.nextUrl.pathname.startsWith('/api')) {
     return apiMiddleware(request)
   }
