@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
+  console.log("HERE");
   
   if (process.env.NODE_ENV === 'development') {
     response.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
