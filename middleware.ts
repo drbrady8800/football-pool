@@ -37,12 +37,14 @@ const corsOptions = {
 
 function getAllowedOrigins() {
   if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'development') {
-    return ['http://localhost:3000']
+    return ['http://localhost:3000', 'http://localhost:3000/']
   }
   
   return [
     `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`,
-    'https://football-pool-rho.vercel.app'
+    `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/`,
+    'https://football-pool-rho.vercel.app',
+    'https://football-pool-rho.vercel.app/'
   ]
 }
 
