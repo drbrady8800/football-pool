@@ -41,10 +41,8 @@ function getAllowedOrigins() {
   }
   
   return [
-    `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`,
-    `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/`,
-    'https://football-pool-rho.vercel.app',
-    'https://football-pool-rho.vercel.app/'
+    `https://big-georges-football-pool.vercel.app`,
+    'https://football-pool-declan-bradys-projects.vercel.app',
   ]
 }
 
