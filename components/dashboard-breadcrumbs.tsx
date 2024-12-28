@@ -13,7 +13,7 @@ import {
   BreadcrumbSeparator
 } from '@/components/ui/breadcrumb';
 
-export function DashboardBreadcrumbs() {
+export default function DashboardBreadcrumbs() {
   const pathname = usePathname().split("/");
   const linkRoutes = pathname.slice(1, -1);
   const finalRoute = pathname.slice(-1);

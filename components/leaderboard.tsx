@@ -10,10 +10,11 @@ import { isLastPlace, isFirstPlace } from '@/lib/utils';
 import { toast } from "@/hooks/use-toast"
 
 interface LeaderboardProps {
-  gameCount?: number
+  gameCount?: number;
+  userCount?: number;
 }
 
-export function Leaderboard({ gameCount }: LeaderboardProps) {
+export default function Leaderboard({ gameCount, userCount }: LeaderboardProps) {
   const [standings, setStandings] = React.useState<Array<Standing>>([])
   const [loading, setLoading] = React.useState<boolean>(false)
 
@@ -45,7 +46,7 @@ export function Leaderboard({ gameCount }: LeaderboardProps) {
       ) : standings.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">No standings available</div>
       ) : (
-        standings.map((standing, index) => {
+        standings.slice(0, userCount).map((standing, index) => {
           const isInFirstPlace = isFirstPlace(standing, standings)
           const isInLastPlace = isLastPlace(standing, standings)
           const previousPlayer = index > 0 ? standings[index - 1] : null

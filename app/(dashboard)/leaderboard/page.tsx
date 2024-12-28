@@ -3,7 +3,6 @@ import React from "react"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -14,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Leaderboard } from "@/components/leaderboard"
+import Leaderboard from "@/components/leaderboard"
 import { fetchGames } from "@/lib/api/games"
 import { toast } from "@/hooks/use-toast"
 

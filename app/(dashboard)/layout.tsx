@@ -1,4 +1,4 @@
-import { DashboardBreadcrumbs } from '@/components/dashboard-breadcrumbs';
+import DashboardBreadcrumbs from '@/components/dashboard-breadcrumbs';
 import { DesktopNav, MobileNav } from '@/components/navigation';
 
 import { Analytics } from '@vercel/analytics/react';
@@ -20,9 +20,9 @@ export default function DashboardLayout({
               <MobileNav />
               <DashboardBreadcrumbs />
             </div>
-            <div>
+            {/* <div>
               <User />
-            </div>
+            </div> */}
           </header>
           <main className="grid flex-1 items-start gap-2 p-4 sm:px-6 sm:py-0 md:gap-4 bg-muted/40">
             {children}
