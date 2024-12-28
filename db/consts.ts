@@ -30,8 +30,6 @@ export const teamsByYear = {
     "East Carolina",
     "BYU",
     "Colorado",
-    "Army",
-    "Louisiana Tech",
     "Missouri",
     "Iowa",
     "Alabama",

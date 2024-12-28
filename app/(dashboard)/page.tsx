@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+import CarderHeaderWithLink from "@/components/card-header-link";
 import GamesList from "@/components/games-list";
 import Leaderboard from "@/components/leaderboard";
 import PointsTrend from "@/components/points-trend";
@@ -24,8 +25,8 @@ import { toast } from "@/hooks/use-toast";
 import { fetchGames } from "@/lib/api/games";
 import { fetchUsers } from "@/lib/api/users";
 import { type GameWithTeams, type User } from "@/db/types";
-import { set } from "lodash";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 export default function HomePage() {
   const router = useRouter()
@@ -63,46 +64,39 @@ export default function HomePage() {
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle>Leaderboard</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CarderHeaderWithLink title="Leaderboard" href="/leaderboard" />
+        <CardContent className="flex flex-col gap-4">
           <Leaderboard userCount={5} />
+          <Separator />
+          <h2 className="text-lg font-bold">View Your Picks</h2>
+          <div className="flex flex-row items-center gap-4">
+            <Select
+              defaultValue={selectedUser?.id}
+              onValueChange={(value) => {
+                const user = users.find(u => u.id === value)
+                setSelectedUser(user || null)
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select a person" />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map(user => (
+                  <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={() => router.push(`/leaderboard/${selectedUser?.id}`)}>View Picks</Button>
+          </div>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader>
-          <CardTitle>View Your Picks</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-row items-center gap-4">
-          <Select
-            defaultValue={selectedUser?.id}
-            onValueChange={(value) => {
-              const user = users.find(u => u.id === value)
-              setSelectedUser(user || null)
-            }}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select a person" />
-            </SelectTrigger>
-            <SelectContent>
-              {users.map(user => (
-                <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button onClick={() => router.push(`/leaderboard/${selectedUser?.id}`)}>View Picks</Button>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Points Trend</CardTitle>
-        </CardHeader>
+        <CarderHeaderWithLink title="Points Trend" href="/trends" />
         <CardContent>
           <PointsTrend miniture={true} />
         </CardContent>
       </Card>
-      <GamesList games={games} isLoading={loading} title="Today's Games"/>
+      <GamesList games={games} isLoading={loading} title="Today's Games" href="/games"/>
     </>
   );
 }

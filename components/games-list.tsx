@@ -3,22 +3,28 @@ import React from 'react';
 
 import { GameWithTeams } from '@/db/types';
 import GameCard from '@/components/game-card';
+import CarderHeaderWithLink from './card-header-link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface GamesListProps {
   games: GameWithTeams[];
   isLoading: boolean;
   title: string;
+  href?: string;
 }
 
-export default function GamesList({ games, isLoading, title }: GamesListProps) {
+export default function GamesList({ games, isLoading, title, href }: GamesListProps) {
 
   return (
     <div className="w-full mx-auto space-y-8">
       <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-        </CardHeader>
+        {href ? (
+          <CarderHeaderWithLink title={title} href={href} />
+        ) : (
+          <CardHeader>
+            <CardTitle>{title}</CardTitle>
+          </CardHeader>
+        )}
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading...</div>

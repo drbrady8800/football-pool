@@ -27,7 +27,7 @@ export async function fetchPicks(options: FetchPicksOptions): Promise<PickWithGa
   });
 
   if (!response.ok) {
-    throw new Error('Failed to fetch game');
+    throw new Error('Failed to fetch picks');
   }
 
   const data = await response.json();
