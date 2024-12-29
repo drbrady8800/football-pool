@@ -1,4 +1,8 @@
 "use client"
+import React from 'react';
+import { Loader2 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -6,67 +10,56 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
-import { getApiUrl } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
+import { ingestTeams, updateTeams } from '@/lib/api/teams';
+import { ingestGames, updateGames } from '@/lib/api/games';
+import { ingestPicks } from '@/lib/api/picks';
 
-interface IngestDataProps {
-  method: string;
-  endpoint: string;
-  setIsLoading: (isLoading: boolean) => void;
-  toast: ReturnType<typeof useToast>["toast"];
-  file?: File;
+interface LoadingButtonProps {
+  action: () => Promise<string>;
+  text: string;
+  loadingText?: string;
+  disabled?: boolean;
 }
 
-const ingestData = async ({method, endpoint, setIsLoading, toast, file}: IngestDataProps) => {
-  setIsLoading(true);
-  
-  try {
-    const formData = new FormData();
-    if (file) {
-      formData.append('file', file);
-    }
+const LoadingButton = ({ action, text, loadingText, disabled = false }: LoadingButtonProps) => {
+  const [isLoading, setIsLoading] = React.useState(false);
 
-    const response = await fetch(`${getApiUrl()}/${endpoint}`, {
-      method,
-      body: file ? formData : undefined,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    const responseJson = await response.json();
-
-    if (!response.ok) {
-      console.error(responseJson);
+  const handleClick = async () => {
+    setIsLoading(true);
+    try {
+      const result = await action();
       toast({
-        title: responseJson["error"],
-        description: responseJson["details"],
+        title: "Success",
+        description: result,
+        variant: "success",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    toast({
-      title: "Success",
-      description: responseJson["message"],
-      variant: "success",
-    });
-  } finally {
-    setIsLoading(false);
-  }
-}
+  return (
+    <Button 
+      onClick={handleClick} 
+      disabled={isLoading || disabled}
+      className="w-full sm:w-auto m-0"
+    >
+      {isLoading && <Loader2 className='w-4 h-4 mr-2 animate-spin'/>}
+      {isLoading ? loadingText || `${text}ing...` : text}
+    </Button>
+  );
+};
 
 export default function AdminPage() {
-  const { toast } = useToast();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isIngestTeamsLoading, setIsIngestTeamsLoading] = useState(false);
-  const [isUpdateTeamsLoading, setIsUpdateTeamsLoading] = useState(false);
-  const [isIngestGamesLoading, setIsIngestGamesLoading] = useState(false);
-  const [isUpdateGamesLoading, setIsUpdateGamesLoading] = useState(false);
-  const [isIngestPicksLoading, setIsIngestPicksLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -74,34 +67,11 @@ export default function AdminPage() {
     }
   };
 
-  const ingestTeams = async () => {
-    ingestData({ method: "POST", endpoint: '/teams', setIsLoading: setIsIngestTeamsLoading, toast });
-  };
-  const updateTeams = async () => {
-    ingestData({ method: "PUT", endpoint: '/teams', setIsLoading: setIsUpdateTeamsLoading, toast });
-  };
-  const ingestGames = async () => {
-    ingestData({ method: "POST", endpoint: '/games', setIsLoading: setIsIngestGamesLoading, toast });
-  };
-  const updateGames = async () => {
-    ingestData({ method: "PUT", endpoint: '/games', setIsLoading: setIsUpdateGamesLoading, toast });
-  };
-  const ingestPicks = async () => {
+  const handleIngestPicks = async () => {
     if (!selectedFile) {
-      toast({
-        title: "Error",
-        description: "Please select a CSV file first",
-        variant: "destructive",
-      });
-      return;
+      throw new Error("Please select a CSV file first");
     }
-    ingestData({ 
-      method: "POST", 
-      endpoint: '/api/picks', 
-      setIsLoading: setIsIngestPicksLoading, 
-      toast,
-      file: selectedFile 
-    });
+    return ingestPicks(selectedFile);
   };
 
   return (
@@ -113,65 +83,29 @@ export default function AdminPage() {
       <CardContent className="flex flex-col gap-4 align-center">
         <h2 className="text-lg font-semibold">Teams</h2>
         <div className="flex flex-grow gap-4 align-center">
-          <Button 
-            onClick={ingestTeams} 
-            disabled={isIngestTeamsLoading}
-            className="w-full sm:w-auto m-0"
-          >
-            {isIngestTeamsLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Ingesting Teams
-              </>
-            ) : (
-              'Ingest Teams'
-            )}
-          </Button>
-          <Button 
-            onClick={updateTeams} 
-            disabled={isUpdateTeamsLoading}
-            className="w-full sm:w-auto m-0"
-          >
-            {isUpdateTeamsLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Updating Teams
-              </>
-            ) : (
-              'Update Teams'
-            )}
-          </Button>
+          <LoadingButton 
+            action={ingestTeams}
+            text="Ingest Teams"
+            loadingText="Ingesting Teams"
+          />
+          <LoadingButton 
+            action={updateTeams}
+            text="Update Teams"
+            loadingText="Updating Teams"
+          />
         </div>
         <h2 className="text-lg font-semibold">Games</h2>
         <div className="flex flex-grow gap-4 align-center">
-          <Button 
-            onClick={ingestGames} 
-            disabled={isIngestGamesLoading}
-            className="w-full sm:w-auto m-0"
-          >
-            {isIngestGamesLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Ingesting Games
-              </>
-            ) : (
-              'Ingest Games'
-            )}
-          </Button>
-          <Button 
-            onClick={updateGames} 
-            disabled={isUpdateGamesLoading}
-            className="w-full sm:w-auto m-0"
-          >
-            {isUpdateGamesLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Updating Games
-              </>
-            ) : (
-              'Update Games'
-            )}
-          </Button>
+          <LoadingButton 
+            action={ingestGames}
+            text="Ingest Games"
+            loadingText="Ingesting Games"
+          />
+          <LoadingButton 
+            action={updateGames}
+            text="Update Games"
+            loadingText="Updating Games"
+          />
         </div>
         <h2 className="text-lg font-semibold">Picks</h2>
         <div className="flex flex-grow gap-4 align-center">
@@ -180,20 +114,12 @@ export default function AdminPage() {
             accept=".csv" 
             onChange={handleFileChange}
           />
-          <Button 
-            onClick={ingestPicks}
-            disabled={isIngestPicksLoading || !selectedFile}
-            className="w-full sm:w-auto m-0"
-          >
-            {isIngestPicksLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Ingesting Picks
-              </>
-            ) : (
-              'Ingest Picks'
-            )}
-          </Button>
+          <LoadingButton 
+            action={handleIngestPicks}
+            text="Ingest Picks"
+            loadingText="Ingesting Picks"
+            disabled={!selectedFile}
+          />
         </div>
       </CardContent>
     </Card>

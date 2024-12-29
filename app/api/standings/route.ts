@@ -11,7 +11,6 @@ import { type Standing } from "@/lib/types";
 
 export const dynamic = 'force-dynamic';
 
-
 export async function GET(request: NextRequest) {
   const season = getBowlYear();
   const searchParams = request.nextUrl.searchParams;
@@ -35,9 +34,8 @@ export async function GET(request: NextRequest) {
       .select({
         userId: users.id,
         name: users.name,
-        correctPicks: sql<number>`sum(case when ${picks.selectedTeamId} = ${games.winningTeamId} then 1 else 0 end)`,
+        correctPicks: sql<number>`sum(${picks.pointsEarned})`,
         totalPicks: sql<number>`count(*)`,
-        accuracy: sql<number>`sum(case when ${picks.selectedTeamId} = ${games.winningTeamId} then 1 else 0 end)::float / count(*) * 100`
       })
       .from(users)
       .leftJoin(picks, eq(picks.userId, users.id))
@@ -52,8 +50,7 @@ export async function GET(request: NextRequest) {
       )
       .groupBy(users.id)
       .orderBy(
-        desc(sql`sum(case when ${picks.selectedTeamId} = ${games.winningTeamId} then 1 else 0 end)`),
-        desc(sql`sum(case when ${picks.selectedTeamId} = ${games.winningTeamId} then 1 else 0 end)::float / count(*) * 100`)
+        desc(sql`sum(${picks.pointsEarned})`),
       )
 
     return Response.json({
@@ -62,7 +59,6 @@ export async function GET(request: NextRequest) {
         name: standing.name,
         correctPicks: Number(standing.correctPicks) || 0,
         totalPicks: Number(standing.totalPicks) || 0,
-        accuracy: Number(standing.accuracy) || 0,
         points: Number(standing.correctPicks) || 0
       }))
     })

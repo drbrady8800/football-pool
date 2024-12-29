@@ -1,7 +1,7 @@
 import { type User } from '@/db/types';
 import { getApiUrl } from '@/lib/utils';
 
-export async function fetchUsers(): Promise<User[]> {
+export async function getUsers(): Promise<User[]> {
   const response = await fetch(`${getApiUrl()}/users`, {
     method: 'GET',
     headers: {
@@ -17,7 +17,7 @@ export async function fetchUsers(): Promise<User[]> {
   return data["users"];
 }
 
-export async function fetchUserById(userId: string): Promise<User> {
+export async function getUserById(userId: string): Promise<User> {
   const response = await fetch(`${getApiUrl()}/users/${userId}`, {
     method: 'GET',
     headers: {

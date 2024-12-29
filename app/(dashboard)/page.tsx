@@ -22,8 +22,8 @@ import Leaderboard from "@/components/leaderboard";
 import PointsTrend from "@/components/points-trend";
 import { toast } from "@/hooks/use-toast";
 
-import { fetchGames } from "@/lib/api/games";
-import { fetchUsers } from "@/lib/api/users";
+import { getGames } from "@/lib/api/games";
+import { getUsers } from "@/lib/api/users";
 import { type GameWithTeams, type User } from "@/db/types";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -40,8 +40,8 @@ export default function HomePage() {
       try {
         setLoading(true)
         // Then fetch initial standings
-        const initialGames = await fetchGames()
-        const initialUsers = await fetchUsers()
+        const initialGames = await getGames()
+        const initialUsers = await getUsers()
 
         const today = new Date()
         // Check if the game is happening or has happened today

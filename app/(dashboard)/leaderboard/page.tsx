@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import Leaderboard from "@/components/leaderboard"
-import { fetchGames } from "@/lib/api/games"
+import { getGames } from "@/lib/api/games"
 import { toast } from "@/hooks/use-toast"
 
 export default function LeaderboardPage() {
@@ -25,7 +25,7 @@ export default function LeaderboardPage() {
   React.useEffect(() => {
     const initializeLeaderboard = async () => {
       try {
-        const total = (await fetchGames()).filter(game => game.isComplete).length
+        const total = (await getGames()).filter(game => game.isComplete).length
         setTotalGames(total)
       } catch (error) {
         if (error instanceof Error) {

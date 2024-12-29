@@ -43,6 +43,13 @@
       "when": 1735284963253,
       "tag": "0005_bumpy_blacklash",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1735448647267,
+      "tag": "0006_heavy_hulk",
+      "breakpoints": true
     }
   ]
 }

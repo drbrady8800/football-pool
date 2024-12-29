@@ -12,8 +12,7 @@ export type GameWithTeams = Game & { homeTeam: InferSelectModel<typeof teams>, a
 
 // Picks
 export type Pick = InferSelectModel<typeof picks>;
-export type PickWithGameWithTeams = Pick & { game: GameWithTeams };
-export type PickWithGameTeamUser = Pick & { game: GameWithTeams, user: User };
+export type PickWithGameTeamUser = Pick & { game: GameWithTeams, winningTeam: Team, losingTeam: Team, user: User };
 
 // Score Predictions
 export type ScorePrediction = InferSelectModel<typeof scorePredictions>;

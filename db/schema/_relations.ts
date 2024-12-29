@@ -10,7 +10,8 @@ export const teamsRelations = relations(teams, ({ many }) => ({
   homeGames: many(games, { relationName: 'homeTeam' }),
   awayGames: many(games, { relationName: 'awayTeam' }),
   winningGames: many(games, { relationName: 'winningTeam' }),
-  picks: many(picks, { relationName: 'selectedTeam' }),
+  winningPicks: many(picks, { relationName: 'winningTeam' }),
+  losingPicks: many(picks, { relationName: 'losingTeam' }),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -45,10 +46,15 @@ export const picksRelations = relations(picks, ({ one }) => ({
     fields: [picks.gameId],
     references: [games.id],
   }),
-  selectedTeam: one(teams, {
-    fields: [picks.selectedTeamId],
+  winningTeam: one(teams, {
+    fields: [picks.winningTeamId],
     references: [teams.id],
-    relationName: 'selectedTeam',
+    relationName: 'winningTeam',
+  }),
+  losingTeam: one(teams, {
+    fields: [picks.losingTeamId],
+    references: [teams.id],
+    relationName: 'losingTeam',
   }),
 }));
 

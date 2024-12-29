@@ -1,13 +1,15 @@
 import fetch from 'node-fetch';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or, sql } from 'drizzle-orm';
 
 import db from '@/db/db';
 import games from '@/db/schema/games';
+import picks from '@/db/schema/picks';
 import teams from '@/db/schema/teams';
 import { teamsByYear } from '@/db/consts'
 import { parseDate } from '@/lib/utils';
+import { Game } from '../types';
 
-export interface GameApiResponse {
+interface GameApiResponse {
   id: number;
   season: number;
   week: number;
@@ -47,6 +49,18 @@ export interface GameApiResponse {
   excitement_index: number;
   highlights: string;
   notes: string;
+}
+
+interface GameApiTransformed {
+  name: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  gameDate: Date;
+  winningTeamId: string | null;
+  homeTeamScore: number;
+  awayTeamScore: number;
+  isComplete: boolean;
+  season: number;
 }
 
 // Modify the team lookup function to be more efficient
@@ -114,22 +128,28 @@ async function transformGameData(apiGame: GameApiResponse) {
   };
 }
 
-async function gameExists(homeTeamId: string, awayTeamId: string, gameDate: Date): Promise<boolean> {
-  const existingGame = await db.select({ id: games.id })
+async function getExistingGame(homeTeamId: string, awayTeamId: string, gameDate: Date, name: string): Promise<Game | null> {
+  const [existingGame] = await db
+    .select()
     .from(games)
     .where(
-      and(
-        eq(games.homeTeamId, homeTeamId),
-        eq(games.awayTeamId, awayTeamId),
-        eq(games.gameDate, gameDate)
+      or(
+        and(
+          eq(games.homeTeamId, homeTeamId),
+          eq(games.awayTeamId, awayTeamId),
+          eq(games.gameDate, gameDate)
+        ),
+        and(
+          eq(games.name, name),
+          eq(games.gameDate, gameDate)
+        )
       )
     )
     .limit(1);
 
-  return existingGame.length > 0;
+  return existingGame;
 }
 
-// Main function to process and insert games
 export async function ingestGames({ year }: {year: number }): Promise<string> {
   if (!(String(year) in teamsByYear)) {
     return `No teams found for year ${year}`;
@@ -157,7 +177,7 @@ export async function ingestGames({ year }: {year: number }): Promise<string> {
     // Filter out existing games
     const newGames = [];
     for (const game of transformedGames) {
-      const exists = await gameExists(game.homeTeamId, game.awayTeamId, game.gameDate);
+      const exists = await getExistingGame(game.homeTeamId, game.awayTeamId, game.gameDate, game.name);
       if (!exists) {
         newGames.push(game);
       } else {
@@ -172,7 +192,27 @@ export async function ingestGames({ year }: {year: number }): Promise<string> {
     }
   }
 
-  return `Operation complete: ${insertedCount} games inserted, ${skippedCount} games skipped (already existed)`;
+  return `Operation complete: ${insertedCount} games inserted, ${skippedCount} games skipped`;
+}
+
+async function updatePicksPoints(apiGame: GameApiTransformed, dbGame: Game): Promise<void> {
+  let pointsValue = 1;
+  if (dbGame.name?.includes('Quarterfinal')) {
+    pointsValue = 2;
+  } else if (dbGame.name?.includes('Semifinal')) {
+    pointsValue = 3;
+  } else if (dbGame.name?.includes('National Championship')) {
+    pointsValue = 4;
+  }
+  // If the game has a winner, update related picks
+  if (apiGame.winningTeamId !== null) {
+    await db
+      .update(picks)
+      .set({ 
+        pointsEarned: sql`CASE WHEN winning_team_id = ${apiGame.winningTeamId} THEN ${pointsValue} ELSE 0 END` 
+      })
+      .where(eq(picks.gameId, dbGame.id));
+  }
 }
 
 export async function updateGames({ year }: {year: number }): Promise<string> {
@@ -192,32 +232,44 @@ export async function updateGames({ year }: {year: number }): Promise<string> {
 
   // Process games in smaller batches
   const batchSize = 10;
-  let updatedCount = 0;
-  let notFoundCount = 0;
+  let foundCount = 0;
+  let changedCount = 0;
 
   for (let i = 0; i < apiTeamsFiltered.length; i += batchSize) {
     const batch = apiTeamsFiltered.slice(i, i + batchSize);
     const transformedGames = await Promise.all(batch.map(transformGameData));
     
     for (const game of transformedGames) {
-      const exists = await gameExists(game.homeTeamId, game.awayTeamId, game.gameDate);
-      if (exists) {
-        await db
-          .update(games)
-          .set(game)
-          .where(
-            and(
-              eq(games.homeTeamId, game.homeTeamId),
-              eq(games.awayTeamId, game.awayTeamId),
-              eq(games.gameDate, game.gameDate)
-            )
-          );
-        updatedCount++;
-      } else {
-        notFoundCount++;
+      // Find matching game either by teams+date or by name
+      const currentGame = await getExistingGame(game.homeTeamId, game.awayTeamId, game.gameDate, game.name);
+
+      if (currentGame) {
+        foundCount++;
+        
+        // Check if any fields are actually different
+        const hasChanges = Object.keys(game).some(key => {
+          const k = key as keyof typeof game;
+          // Special handling for date comparison
+          if (k === 'gameDate') {
+            const date1 = new Date(game[k]);
+            const date2 = new Date(currentGame[k]);
+            return date1.toISOString().split('T')[0] !== date2.toISOString().split('T')[0];
+          }
+          return game[k] !== currentGame[k];
+        });
+
+        if (hasChanges) {
+          await db
+            .update(games)
+            .set(game)
+            .where(eq(games.id, currentGame.id)); // Update by ID instead of composite key
+          changedCount++;
+        }
+
+        await updatePicksPoints(game, currentGame);
       }
     }
   }
 
-  return `Operation complete: ${updatedCount} games updated, ${notFoundCount} were unable to be updated (not found)`;
+  return `Operation complete: ${foundCount} games found, ${changedCount} ${changedCount === 1 ? 'game' : 'games'} had changes`;
 }

@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fetchPicks } from '@/lib/api/picks';
-import { fetchStandings } from '@/lib/api/standings';
+import { getPicks } from '@/lib/api/picks';
+import { getStandings } from '@/lib/api/standings';
 import { isLastPlace, isFirstPlace } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,8 +43,8 @@ export default function PersonPage({
       try {
         setIsLoading(true);
         const [picksData, standingsData] = await Promise.all([
-          fetchPicks({ userId }),
-          fetchStandings({})
+          getPicks({ userId }),
+          getStandings({})
         ]);
 
         // Sort picks by game date
@@ -113,13 +113,20 @@ export default function PersonPage({
         <CardContent>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
             {picks && picks.length > 0 ? (
-              picks.map(pick => (
-                <GameCard 
-                  game={pick.game} 
-                  selectedTeamId={pick.selectedTeamId} 
-                  key={pick.id} 
-                />
-              ))
+              picks.map(pick => {
+                const game = pick.game;
+                if (!game.homeTeam || !game.awayTeam) {
+                  game.homeTeam = pick.winningTeam;
+                  game.awayTeam = pick.losingTeam;
+                }
+                return (
+                  <GameCard 
+                    game={game} 
+                    winningTeamId={pick.winningTeamId} 
+                    key={pick.id} 
+                  />
+                );
+              })
             ) : (
               <p className="text-muted-foreground">No picks found</p>
             )}

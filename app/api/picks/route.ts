@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(picks.gameId, searchParams.get('gameId')!));
     }
 
-    // Convert the file to text
     const result = await db.query.picks.findMany({
       where: and(...conditions),
       with: {
@@ -35,6 +34,8 @@ export async function GET(request: NextRequest) {
             awayTeam: true,
           },
         },
+        winningTeam: true,
+        losingTeam: true,
         user: true,
       },
     });

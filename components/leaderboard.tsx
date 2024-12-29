@@ -5,7 +5,7 @@ import React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { fetchStandings } from "@/lib/api/standings"
+import { getStandings } from "@/lib/api/standings"
 import { type Standing } from "@/lib/types"
 import { isLastPlace, isFirstPlace } from '@/lib/utils';
 import { toast } from "@/hooks/use-toast"
@@ -50,7 +50,7 @@ export default function Leaderboard({ gameCount, userCount }: LeaderboardProps) 
       try {
         setLoading(true)
         // Then fetch initial standings
-        const initialStandings = await fetchStandings({ numGames: gameCount })
+        const initialStandings = await getStandings({ numGames: gameCount })
         setStandings(initialStandings)
       } catch (error) {
         if (error instanceof Error) {

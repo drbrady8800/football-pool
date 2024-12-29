@@ -37,7 +37,7 @@ export async function GET() {
         userId: users.id,
         name: users.name,
         cumulativePoints: sql<number>`
-          sum(case when ${picks.selectedTeamId} = ${games.winningTeamId} then 1 else 0 end) 
+          sum(case when ${picks.winningTeamId} = ${games.winningTeamId} then 1 else 0 end) 
           over (
             partition by ${users.id} 
             order by ${games.gameDate} 

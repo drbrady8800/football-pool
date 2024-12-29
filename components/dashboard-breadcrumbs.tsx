@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type GameWithTeams, type User } from '@/db/types';
-import { fetchGameById } from '@/lib/api/games';
-import { fetchUserById } from '@/lib/api/users';
+import { getGameById } from '@/lib/api/games';
+import { getUserById } from '@/lib/api/users';
 
 function GameBreadcrumb({ gameId }: { gameId: string }) {
   const [game, setGame] = useState<GameWithTeams | null>(null);
@@ -24,7 +24,7 @@ function GameBreadcrumb({ gameId }: { gameId: string }) {
   useEffect(() => {
     async function fetchGame() {
       try {
-        const response = await fetchGameById(gameId);
+        const response = await getGameById(gameId);
         setGame(response);
       } catch (error) {
         console.error('Error fetching game:', error);
@@ -50,7 +50,7 @@ function UserBreadcrumb({ userId }: { userId: string }) {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const response = await fetchUserById(userId);
+        const response = await getUserById(userId);
         setUser(response);
       } catch (error) {
         console.error('Error fetching user:', error);

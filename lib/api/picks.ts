@@ -6,7 +6,7 @@ interface FetchPicksOptions {
   userId?: string;
 };
 
-export async function fetchPicks(options: FetchPicksOptions): Promise<PickWithGameTeamUser[]> {
+export async function getPicks(options: FetchPicksOptions): Promise<PickWithGameTeamUser[]> {
   const searchParams = new URLSearchParams();
   
   // Add parameters if they exist
@@ -32,4 +32,22 @@ export async function fetchPicks(options: FetchPicksOptions): Promise<PickWithGa
 
   const data = await response.json();
   return data["picks"];
+}
+
+export async function ingestPicks(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${getApiUrl()}/picks`, {
+    method: 'POST',
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.details || error.error || 'Failed to ingest picks');
+  }
+  
+  const data = await response.json();
+  return data['message'];
 }

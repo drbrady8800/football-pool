@@ -3,7 +3,6 @@ export type Standing = {
   name: string;
   correctPicks: number;
   totalPicks: number;
-  accuracy: number;
   points: number;
 }
 

@@ -1,7 +1,7 @@
 import { type Standing, type StandingChartColumn } from "@/lib/types";
 import { getApiUrl } from '@/lib/utils';
 
-export async function fetchStandings({ numGames }: { numGames?: number }): Promise<Standing[]> {
+export async function getStandings({ numGames }: { numGames?: number }): Promise<Standing[]> {
   const response = await fetch(`${getApiUrl()}/standings${numGames ? `?numGames=${numGames}` : ''}`, {
     method: 'GET',
     headers: {
@@ -17,7 +17,7 @@ export async function fetchStandings({ numGames }: { numGames?: number }): Promi
   return data["standings"];
 }
 
-export async function fetchStandingsChartData(): Promise<StandingChartColumn[]> {
+export async function getStandingsChartData(): Promise<StandingChartColumn[]> {
   const response = await fetch(`${getApiUrl()}/standings/all`, {
     method: 'GET',
     headers: {

@@ -9,15 +9,94 @@ import teams from "@/db/schema/teams";
 import users from "@/db/schema/users";
 import { Game, Team } from "@/db/types";
 
+import { cfpStructureByYear, firstRoundByeTeamsByYear } from "@/db/consts";
+
 interface PickToInsert {
   userId: string;
   gameId: string;
-  selectedTeamId: string;
+  winningTeamId: string;
+  losingTeamId: string;
 }
 
 interface ScorePredictionToInsert {
   userId: string;
   score: number;
+}
+
+interface PickTracker {
+  [gameNumber: number]: {
+    winningTeamId: string;
+    losingTeamId: string;
+  };
+}
+
+function processCFPPicks(
+  cfpPicksByGame: { [gameNumber: number]: string },
+  teamMap: Map<string, string>,
+  cfpGames: Game[],
+): { winningTeamId: string; losingTeamId: string; gameId: string }[] {
+  const cfpStructure = cfpStructureByYear['2024'];
+  const picks: { winningTeamId: string; losingTeamId: string; gameId: string }[] = [];
+  const pickTracker: PickTracker = {};
+
+  // Process games in order based on dependencies
+  for (const game of cfpStructure) {
+    const gameNumber = game.gameNumber;
+    const teamName = cfpPicksByGame[gameNumber];
+    const winningTeamId = teamMap.get(teamName.toLowerCase());
+
+    if (!winningTeamId) {
+      throw new Error(`Could not find team: ${teamName} for CFP game ${gameNumber}`);
+    }
+
+    let losingTeamId: string;
+
+    if (game.dependsOn) {
+      // Handle games with dependencies
+      if (game.dependsOn.length === 1) {
+        // Games with one dependency and possibly a fixed opponent
+        const dependency = game.dependsOn[0];
+        const previousWinner = pickTracker[dependency.gameNumber].winningTeamId;
+        const fixedOpponent = dependency.opponent ? teamMap.get(dependency.opponent.toLowerCase()) : undefined;
+        
+        // Validate the pick is one of these teams
+        if (winningTeamId !== previousWinner && winningTeamId !== fixedOpponent) {
+          throw new Error(
+            `Invalid pick for game ${gameNumber}. Team must be either ${dependency.opponent} or the winner of game ${dependency.gameNumber}`
+          );
+        }
+        
+        // The losing team is whichever team wasn't picked as the winner
+        losingTeamId = winningTeamId === previousWinner ? fixedOpponent! : previousWinner;
+      } else {
+        // Games between winners of previous games
+        const team1 = pickTracker[game.dependsOn[0].gameNumber].winningTeamId;
+        const team2 = pickTracker[game.dependsOn[1].gameNumber].winningTeamId;
+        
+        if (winningTeamId !== team1 && winningTeamId !== team2) {
+          throw new Error(
+            `Invalid pick for game ${gameNumber}. Team must be winner of either game ${game.dependsOn[0].gameNumber} or ${game.dependsOn[1].gameNumber}`
+          );
+        }
+        losingTeamId = winningTeamId === team1 ? team2 : team1;
+      }
+    } else {
+      // For initial games, use the game data to determine the losing team
+      const game = cfpGames[gameNumber - 1];
+      losingTeamId = game.homeTeamId === winningTeamId ? game.awayTeamId! : game.homeTeamId!;
+    }
+
+    // Store the pick for future reference
+    pickTracker[gameNumber] = { winningTeamId, losingTeamId };
+    
+    picks.push({
+      winningTeamId,
+      losingTeamId,
+      gameId: cfpGames[gameNumber - 1].id
+    });
+  }
+
+  return picks;
 }
 
 export async function ingestPicks({ year, csvContent }: { year: number, csvContent: string }) {
@@ -53,17 +132,16 @@ export async function ingestPicks({ year, csvContent }: { year: number, csvConte
   const allTeams = await db.select().from(teams).where();
   const teamMap = new Map<string, string>(allTeams.map((team: Team) => [team.name.toLowerCase(), team.id]));
 
-// Fetch CFP games ordered by start time
-const cfpGames = await db
-  .select()
-  .from(games)
-  .where(like(games.name, "%College Football Playoff%"))
-  .orderBy(asc(games.gameDate));
+  // Fetch CFP games ordered by start time
+  const cfpGames = await db
+    .select()
+    .from(games)
+    .where(like(games.name, "%College Football Playoff%"))
+    .orderBy(asc(games.gameDate));
 
- if (cfpGames.length !== 11) {
-   throw new Error('Database must contain exactly 11 CFP games');
- }
- const cfpGameMap = new Map<number, string>(cfpGames.map((game: Game, index: number) => [index + 1, game.id]));
+  if (cfpGames.length !== 11) {
+    throw new Error('Database must contain exactly 11 CFP games');
+  }
 
   // Process each row
   const picksToInsert: PickToInsert[] = [];
@@ -114,19 +192,25 @@ const cfpGames = await db
         throw new Error(`Could not find game for teams: ${team1} vs ${team2}`);
       }
 
-      const selectedTeamId = teamMap.get(selectedTeam.toLowerCase());
-      if (!selectedTeamId) {
+      const winningTeamId = teamMap.get(selectedTeam.toLowerCase());
+      // Determine losing team
+      const losingTeamId = selectedTeam.toLowerCase() === team1.toLowerCase() ? team2Id : team1Id;
+
+      if (!winningTeamId) {
         throw new Error(`Could not find selected team: ${selectedTeam}`);
       }
 
       picksToInsert.push({
         userId,
         gameId: game[0].id,
-        selectedTeamId
+        winningTeamId,
+        losingTeamId
       });
     }
 
+    
     // Process CFP picks
+    const cfpPicksByGame: { [gameNumber: number]: string } = {};
     for (const cfpColumn of cfpGameColumns) {
       const pickNumber = parseInt(cfpColumn.replace('CFP Game ', ''));
       const teamName = row[cfpColumn];
@@ -135,22 +219,16 @@ const cfpGames = await db
         throw new Error(`Missing CFP pick for ${cfpColumn} by ${userName}`);
       }
 
-      const teamId = teamMap.get(teamName.toLowerCase());
-      if (!teamId) {
-        throw new Error(`Could not find team: ${teamName} for CFP pick`);
-      }
-
-      const gameId = cfpGameMap.get(pickNumber);
-      if (!gameId) {
-        throw new Error(`Could not find CFP game for pick number ${pickNumber}`);
-      }
-
-      picksToInsert.push({
-        userId,
-        gameId,
-        selectedTeamId: teamId
-      });
+      cfpPicksByGame[pickNumber] = teamName;
     }
+
+    const cfpPicks = processCFPPicks(cfpPicksByGame, teamMap, cfpGames);
+    picksToInsert.push(...cfpPicks.map(pick => ({
+      userId,
+      gameId: pick.gameId,
+      winningTeamId: pick.winningTeamId,
+      losingTeamId: pick.losingTeamId
+    })));
 
     // Validate score
     const score = parseInt(row['Score']);
@@ -164,7 +242,8 @@ const cfpGames = await db
   await db.insert(picks).values(picksToInsert.map(pick => ({
     userId: pick.userId,
     gameId: pick.gameId,
-    selectedTeamId: pick.selectedTeamId,
+    winningTeamId: pick.winningTeamId,
+    losingTeamId: pick.losingTeamId,
     season: year
   })));
 
@@ -174,9 +253,6 @@ const cfpGames = await db
     score: score.score,
     season: year
   })));
-
-  // For CFP picks, you might want to store them in a separate table
-  // Add implementation here based on your schema
 
   return `Successfully processed ${records.length} entries with ${picksToInsert.length} picks`;
 }

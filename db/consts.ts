@@ -56,3 +56,57 @@ export const teamsByYear = {
     "Clemson"
   ]
 };
+
+interface CFPGameStructure {
+  gameNumber: number;
+  dependsOn?: {
+    gameNumber: number;
+    opponent?: string;
+  }[];
+}
+
+export const firstRoundByeTeamsByYear = {
+  "2024": [
+    "Oregon",
+    "Georgia",
+    "Boise State",
+    "Arizona State"
+  ]
+};
+
+export const cfpStructureByYear: { [year: string]: CFPGameStructure[] } = {
+  "2024": [
+    { gameNumber: 1 }, // Initial games have no dependencies
+    { gameNumber: 2 },
+    { gameNumber: 3 },
+    { gameNumber: 4 },
+    { 
+      gameNumber: 5,
+      dependsOn: [{ gameNumber: 2, opponent: 'Boise State' }]
+    },
+    {
+      gameNumber: 6,
+      dependsOn: [{ gameNumber: 3, opponent: 'Arizona State' }]
+    },
+    {
+      gameNumber: 7,
+      dependsOn: [{ gameNumber: 4, opponent: 'Oregon' }]
+    },
+    {
+      gameNumber: 8,
+      dependsOn: [{ gameNumber: 1, opponent: 'Georgia' }]
+    },
+    {
+      gameNumber: 9,
+      dependsOn: [{ gameNumber: 5 }, { gameNumber: 8 }]
+    },
+    {
+      gameNumber: 10,
+      dependsOn: [{ gameNumber: 6 }, { gameNumber: 7 }]
+    },
+    {
+      gameNumber: 11,
+      dependsOn: [{ gameNumber: 9 }, { gameNumber: 10 }]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 "use client"
 import React from 'react';
 
-import { fetchGames } from '@/lib/api/games';
+import { getGames } from '@/lib/api/games';
 import { GameWithTeams } from '@/db/types';
 import GameList from '@/components/games-list';
 import { toast } from '@/hooks/use-toast';
@@ -16,7 +16,7 @@ export default function GamesPage() {
       try {
         setLoading(true)
         // Then fetch initial standings
-        const initialGames = await fetchGames()
+        const initialGames = await getGames()
         setGames(initialGames)
       } catch (error) {
         if (error instanceof Error) {

@@ -12,8 +12,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { toast } from "@/hooks/use-toast"
-import { fetchStandingsChartData } from "@/lib/api/standings"
-import { fetchUsers } from "@/lib/api/users"
+import { getStandingsChartData } from "@/lib/api/standings"
+import { getUsers } from "@/lib/api/users"
 import { type StandingChartColumn } from "@/lib/types"
 
 interface PointsTrendProps {
@@ -87,8 +87,8 @@ export default function PointsTrend({ miniture }: PointsTrendProps) {
   React.useEffect(() => {
     const initializeChart = async () => {
       try {
-        const data = await fetchStandingsChartData();
-        const users = await fetchUsers();
+        const data = await getStandingsChartData();
+        const users = await getUsers();
         setStandingCartData(data);
 
         const chartConfig = users.reduce((prev, cur, index) => ({
