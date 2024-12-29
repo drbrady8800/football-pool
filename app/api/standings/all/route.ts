@@ -6,6 +6,7 @@ import games from "@/db/schema/games";
 import picks from "@/db/schema/picks";
 import users from "@/db/schema/users";
 import teams from "@/db/schema/teams";
+import { calculatePredictionPoints } from "@/db/utils/get-prediction-points";
 import { getBowlYear } from "@/lib/utils";
 import { type StandingChartColumn } from "@/lib/types";
 
@@ -14,6 +15,7 @@ export const dynamic = 'force-dynamic';
 type GameResult = {
   gameId: number;
   gameName: string;
+  isChampionship: boolean;
   gameDate: Date;
   userId: string;
   name: string;
@@ -28,16 +30,17 @@ export async function GET() {
     const homeTeam = alias(teams, 'homeTeam');
     const awayTeam = alias(teams, 'awayTeam');
 
-    // First, get cumulative points for each user after each game
+    // Get cumulative points for each user after each game
     const results = await db
       .select({
         gameId: games.id,
         gameName: sql<string>`${homeTeam.abbreviation} || ' vs ' || ${awayTeam.abbreviation}`,
+        isChampionship: sql<boolean>`games.name ILIKE '%National Championship%'`,
         gameDate: games.gameDate,
         userId: users.id,
         name: users.name,
         cumulativePoints: sql<number>`
-          sum(case when ${picks.winningTeamId} = ${games.winningTeamId} then 1 else 0 end) 
+          sum(${picks.pointsEarned})
           over (
             partition by ${users.id} 
             order by ${games.gameDate} 
@@ -82,6 +85,18 @@ export async function GET() {
     // Don't forget to push the last standing
     if (currentStanding) {
       gameStandings.push(currentStanding);
+    }    
+
+    // Get the prediction points for the championship game
+    const predictionPoints = await calculatePredictionPoints(season);
+    if (predictionPoints) {
+      const championshipGame = gameStandings[gameStandings.length - 1];
+      if (championshipGame) {
+        for (const userId in predictionPoints) {
+          const totalPoints = Number(championshipGame[userId]) + predictionPoints[userId]
+          championshipGame[userId] = totalPoints;
+        }
+      }
     }
 
     return Response.json(gameStandings);

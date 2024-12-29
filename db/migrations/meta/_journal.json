@@ -50,6 +50,13 @@
       "when": 1735448647267,
       "tag": "0006_heavy_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1735458383403,
+      "tag": "0007_sad_sprite",
+      "breakpoints": true
     }
   ]
 }

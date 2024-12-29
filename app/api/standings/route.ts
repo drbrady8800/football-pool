@@ -1,11 +1,11 @@
-import { and, eq, sql, desc } from "drizzle-orm";
+import { and, eq, sql, desc, isNull, like } from "drizzle-orm";
 import { NextRequest } from 'next/server';
 
 import db from "@/db/db";
-
 import games from "@/db/schema/games";
 import picks from "@/db/schema/picks";
 import users from "@/db/schema/users";
+import scorePredictions from "@/db/schema/scorePredictions";
 import { getBowlYear } from "@/lib/utils";
 import { type Standing } from "@/lib/types";
 
@@ -29,6 +29,65 @@ export async function GET(request: NextRequest) {
         if (!lastDate) return null;
         return new Date(new Date(lastDate).getTime() + 1000).toISOString();
       }) : null;
+
+    // Check if championship game is complete and get its scores
+    const championshipGame = await db
+      .select({
+        id: games.id,
+        homeTeamScore: games.homeTeamScore,
+        awayTeamScore: games.awayTeamScore,
+        isComplete: games.isComplete,
+      })
+      .from(games)
+      .where(
+        and(
+          eq(games.season, season),
+          like(games.name, "%National Championship%")
+        )
+      )
+      .limit(1);
+
+    const champGame = championshipGame[0];
+    let predictionPoints: Record<string, number> = {};
+    
+    if (champGame?.isComplete) {
+      const actualTotal = (champGame.homeTeamScore || 0) + (champGame.awayTeamScore || 0);
+      
+      // Get all predictions for championship game
+      const predictions: { userId: string, score: number }[] = await db
+        .select({
+          userId: scorePredictions.userId,
+          score: scorePredictions.score,
+        })
+        .from(scorePredictions)
+        .where(
+          eq(scorePredictions.season, season),
+        );
+
+      // Calculate differences and find the closest prediction
+      const predictionsWithDiff = predictions.map(pred => ({
+        userId: pred.userId,
+        difference: Math.abs((Number(pred.score) || 0) - actualTotal)
+      }));
+
+      // Sort by difference to find closest
+      predictionsWithDiff.sort((a, b) => a.difference - b.difference);
+      const closestDiff = predictionsWithDiff[0]?.difference;
+
+      // Award points based on prediction accuracy
+      predictionPoints = predictionsWithDiff.reduce((acc, pred) => {
+        if (pred.difference === closestDiff) {
+          acc[pred.userId] = 4; // Closest prediction
+        } else if (pred.difference <= 5) {
+          acc[pred.userId] = 3; // Within 5 points
+        } else if (pred.difference <= 10) {
+          acc[pred.userId] = 2; // Within 10 points
+        } else {
+          acc[pred.userId] = 0;
+        }
+        return acc;
+      }, {} as Record<string, number>);
+    }
     
     const standings = await db
       .select({
@@ -42,7 +101,6 @@ export async function GET(request: NextRequest) {
       .leftJoin(games, eq(picks.gameId, games.id))
       .where(
         and(
-          // Only add the date filter if we have a game limit
           gameLimit ? sql`${games.gameDate} <= ${gameLimit}` : undefined,
           eq(games.season, season),
           eq(games.isComplete, true)
@@ -51,7 +109,7 @@ export async function GET(request: NextRequest) {
       .groupBy(users.id)
       .orderBy(
         desc(sql`sum(${picks.pointsEarned})`),
-      )
+      );
 
     return Response.json({
       standings: standings.map((standing: Standing) => ({
@@ -59,11 +117,12 @@ export async function GET(request: NextRequest) {
         name: standing.name,
         correctPicks: Number(standing.correctPicks) || 0,
         totalPicks: Number(standing.totalPicks) || 0,
-        points: Number(standing.correctPicks) || 0
+        points: (Number(standing.correctPicks) || 0) + (predictionPoints[standing.userId] || 0),
+        predictionPoints: predictionPoints[standing.userId] || 0
       }))
-    })
+    });
   } catch (error) {
-    console.error('Error calculating standings:', error)
-    return Response.json({ error: 'Failed to calculate standings' }, { status: 500 })
+    console.error('Error calculating standings:', error);
+    return Response.json({ error: 'Failed to calculate standings' }, { status: 500 });
   }
 }

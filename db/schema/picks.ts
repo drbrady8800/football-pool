@@ -13,7 +13,7 @@ const picks = pgTable('picks', {
   userId: uuid('user_id').references(() => users.id).notNull(),
   gameId: uuid('game_id').references(() => games.id).notNull(),
   winningTeamId: uuid('winning_team_id').references(() => teams.id).notNull(),
-  losingTeamId: uuid('losing_team_id').references(() => teams.id),
+  losingTeamId: uuid('losing_team_id').references(() => teams.id).notNull(),
   pointsEarned: integer('points_earned'),
   submittedAt: timestamp('submitted_at').notNull().defaultNow(),
   season: integer('season').notNull(),

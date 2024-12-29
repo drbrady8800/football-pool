@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 
 import db from "@/db/db";
 import games from "@/db/schema/games";
-import { ingestGames, updateGames } from "@/db/scripts/ingest-games";
+import { ingestGames, updateGames } from "@/db/utils/ingest-games";
 import { getBowlYear } from "@/lib/utils";
 
 export const dynamic = 'force-dynamic';

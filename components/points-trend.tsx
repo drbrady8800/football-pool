@@ -83,6 +83,8 @@ export default function PointsTrend({ miniture }: PointsTrendProps) {
   const [standingChartData, setStandingCartData] = React.useState<StandingChartColumn[]>()
   const [chartConfig, setChartConfig] = React.useState<ChartConfig>()
 
+  const maxPoints = standingChartData ? Math.max(...standingChartData.map(data => Math.max(...Object.values(data).map(value => Number(value) || 0)))) : 0;
+
   // Initial load
   React.useEffect(() => {
     const initializeChart = async () => {
@@ -129,7 +131,7 @@ export default function PointsTrend({ miniture }: PointsTrendProps) {
               angle={-45}
               textAnchor="end"
             />
-            <YAxis tickLine={false} axisLine={false} />
+            <YAxis tickLine={false} axisLine={false} type="number" domain={[0, maxPoints + 1]} />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent />}

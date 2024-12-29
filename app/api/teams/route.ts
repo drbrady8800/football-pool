@@ -1,4 +1,4 @@
-import { updateTeams, ingestTeams } from "@/db/scripts/ingest-teams"
+import { updateTeams, ingestTeams } from "@/db/utils/ingest-teams"
 export const dynamic = 'force-dynamic';
 
 export async function POST() {

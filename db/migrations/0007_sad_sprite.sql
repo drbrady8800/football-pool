@@ -1,0 +1,1 @@
+ALTER TABLE "picks" ALTER COLUMN "losing_team_id" SET NOT NULL;

@@ -3,7 +3,7 @@ import { eq, and } from "drizzle-orm";
 
 import db from "@/db/db";
 import picks from "@/db/schema/picks";
-import { ingestPicks } from "@/db/scripts/ingest-picks";
+import { ingestPicks } from "@/db/utils/ingest-picks";
 import { getBowlYear } from "@/lib/utils";
 
 export const dynamic = 'force-dynamic';

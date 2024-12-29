@@ -71,7 +71,7 @@ export default function Leaderboard({ gameCount, userCount }: LeaderboardProps) 
 
   return (
     <div className="space-y-4">
-      {standings.slice(0, userCount).map((standing, index) => {
+      {standings.sort((a, b) => b.points - a.points).slice(0, userCount).map((standing, index) => {
         const isInFirstPlace = isFirstPlace(standing, standings)
         const isInLastPlace = isLastPlace(standing, standings)
         const previousPlayer = index > 0 ? standings[index - 1] : null
