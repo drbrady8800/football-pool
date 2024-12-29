@@ -80,23 +80,26 @@ export async function GET() {
       if (currentStanding) {
         currentStanding[row.userId] = row.cumulativePoints;
       }
-    });
-
-    // Don't forget to push the last standing
-    if (currentStanding) {
-      gameStandings.push(currentStanding);
-    }    
+    });  
 
     // Get the prediction points for the championship game
     const predictionPoints = await calculatePredictionPoints(season);
-    if (predictionPoints) {
+    if (Object.keys(predictionPoints).length > 0) {
       const championshipGame = gameStandings[gameStandings.length - 1];
-      if (championshipGame) {
-        for (const userId in predictionPoints) {
-          const totalPoints = Number(championshipGame[userId]) + predictionPoints[userId]
-          championshipGame[userId] = totalPoints;
-        }
+      // Add the prediction points to the championship game
+      const scoreStanding: StandingChartColumn = {
+        game: 'Tie Breaker',
+      };
+      for (const userId in predictionPoints) {
+        const totalPoints = Number(championshipGame[userId]) + predictionPoints[userId];
+        scoreStanding[userId] = totalPoints;
       }
+      gameStandings.push(scoreStanding);
+    } else {
+      // Don't forget to push the last standing
+      if (currentStanding) {
+        gameStandings.push(currentStanding);
+      }  
     }
 
     return Response.json(gameStandings);
