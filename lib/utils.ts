@@ -46,3 +46,16 @@ export function getApiUrl(): string {
   }
   return baseUrl ? `${baseUrl}/api` : 'http://localhost:3000/api';
 }
+
+export const getGamePointValue = (gameName: string | null): number => {
+  if (!gameName) return 1;
+  
+  if (gameName.includes('National Championship')) {
+    return 4;
+  } else if (gameName.includes('Semifinal')) {
+    return 3;
+  } else if (gameName.includes('Quarterfinal')) {
+    return 2;
+  }
+  return 1;
+};

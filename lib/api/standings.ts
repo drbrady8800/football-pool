@@ -10,7 +10,7 @@ export async function getStandings({ numGames }: { numGames?: number }): Promise
   });
 
   if (!response.ok) {
-    throw new Error('Failed to fetch games');
+    throw new Error('Failed to fetch standings');
   }
 
   const data = await response.json();
@@ -26,9 +26,27 @@ export async function getStandingsChartData(): Promise<StandingChartColumn[]> {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to fetch games');
+    throw new Error('Failed to fetch standings');
   }
 
   const data = await response.json();
   return data;
+}
+
+export async function getHypotheticalStandings(predictions: Record<string, string>): Promise<Standing[]> {
+  const response = await fetch(`${getApiUrl()}/standings`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ predictions }),
+  });
+
+  if (!response.ok) {
+    console.error(response)
+    throw new Error('Failed to fetch hypothetical standings');
+  }
+
+  const data = await response.json();
+  return data.standings;
 }

@@ -47,11 +47,11 @@ const navItems: Array<NavItemInfo> = [
     label: 'Trends',
     href: '/trends'
   },
-  // {
-  //   icon: <TrendingUpDown className="h-5 w-5" />,
-  //   label: 'Projections',
-  //   href: '/projections'
-  // }
+  {
+    icon: <TrendingUpDown className="h-5 w-5" />,
+    label: 'Predictions',
+    href: '/predictions'
+  }
 ];
 
 interface NavItemProps {

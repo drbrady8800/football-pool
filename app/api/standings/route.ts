@@ -6,7 +6,7 @@ import games from "@/db/schema/games";
 import picks from "@/db/schema/picks";
 import users from "@/db/schema/users";
 import scorePredictions from "@/db/schema/scorePredictions";
-import { getBowlYear } from "@/lib/utils";
+import { getBowlYear, getGamePointValue } from "@/lib/utils";
 import { type Standing } from "@/lib/types";
 
 export const dynamic = 'force-dynamic';
@@ -124,5 +124,117 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error calculating standings:', error);
     return Response.json({ error: 'Failed to calculate standings' }, { status: 500 });
+  }
+}
+
+// Type for the predictions payload
+type PredictionsPayload = {
+  predictions: Record<string, string>; // gameId -> predictedTeamId
+};
+
+export async function POST(request: NextRequest) {
+  try {
+    const season = getBowlYear();
+    const { predictions } = await request.json() as PredictionsPayload;
+
+    // Get the predicted games with their names for point calculation
+    const predictedGames: {
+      id: string;
+      name: string;
+    }[] = await db
+      .select({
+        id: games.id,
+        name: games.name,
+      })
+      .from(games)
+      .where(
+        sql`${games.id} IN ${Object.keys(predictions)}`
+      );
+
+    // Get all users and their current standings
+    const baseStandings: {
+      userId: string;
+      name: string;
+      correctPicks: number;
+      totalPicks: number;
+    }[] = await db
+      .select({
+        userId: users.id,
+        name: users.name,
+        correctPicks: sql<number>`sum(${picks.pointsEarned})`,
+        totalPicks: sql<number>`count(*)`,
+      })
+      .from(users)
+      .leftJoin(picks, eq(picks.userId, users.id))
+      .leftJoin(games, eq(picks.gameId, games.id))
+      .where(
+        and(
+          eq(games.season, season),
+          eq(games.isComplete, true)
+        )
+      )
+      .groupBy(users.id);
+
+    // Get all existing picks for the predicted games
+    const existingPicks: {
+      userId: string;
+      gameId: string;
+      winningTeamId: string;
+    }[] = await db
+      .select({
+        userId: picks.userId,
+        gameId: picks.gameId,
+        winningTeamId: picks.winningTeamId,
+      })
+      .from(picks)
+      .where(
+        and(
+          eq(picks.season, season),
+          sql`${picks.gameId} IN ${Object.keys(predictions)}`
+        )
+      );
+
+    // Calculate hypothetical points for each user
+    const hypotheticalStandings = baseStandings.map((standing) => {
+      let hypotheticalPoints = Number(standing.correctPicks) || 0;
+      let totalPicks = Number(standing.totalPicks) || 0;
+
+      // Check each prediction against user's pick
+      Object.entries(predictions).forEach(([gameId, predictedTeamId]) => {
+        const userPick = existingPicks.find(
+          pick => pick.userId === standing.userId && pick.gameId === gameId
+        );
+        
+        const game = predictedGames.find(g => g.id === gameId);
+        if (!game) return;
+
+        const pointValue = getGamePointValue(game.name);
+
+        if (userPick && userPick.winningTeamId === predictedTeamId) {
+          hypotheticalPoints += pointValue;
+          totalPicks += 1;
+        }
+      });
+
+      return {
+        userId: standing.userId,
+        name: standing.name,
+        correctPicks: hypotheticalPoints,
+        totalPicks,
+        points: hypotheticalPoints, // Add any additional scoring logic here
+        predictionPoints: 0 // Could be used for championship prediction points
+      } as Standing;
+    });
+
+    // Sort standings by points
+    hypotheticalStandings.sort((a, b) => b.points - a.points);
+
+    return Response.json({ standings: hypotheticalStandings });
+  } catch (error) {
+    console.error('Error calculating hypothetical standings:', error);
+    return Response.json(
+      { error: 'Failed to calculate hypothetical standings' }, 
+      { status: 500 }
+    );
   }
 }

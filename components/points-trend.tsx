@@ -16,10 +16,6 @@ import { getStandingsChartData } from "@/lib/api/standings"
 import { getUsers } from "@/lib/api/users"
 import { type StandingChartColumn } from "@/lib/types"
 
-interface PointsTrendProps {
-  miniture?: boolean;
-}
-
 function ChartSkeleton({ miniture }: { miniture?: boolean }) {
   return (
     <div className={`relative w-full ${miniture ? 'md:h-96' : 'h-[600px]'}`}>
@@ -79,40 +75,89 @@ function ChartSkeleton({ miniture }: { miniture?: boolean }) {
   );
 }
 
-export default function PointsTrend({ miniture }: PointsTrendProps) {
+
+interface PointsTrendProps {
+  miniture?: boolean;
+  selectedPlayers?: string[];
+}
+
+export default function PointsTrend({ miniture, selectedPlayers }: PointsTrendProps) {
   const [standingChartData, setStandingCartData] = React.useState<StandingChartColumn[]>()
   const [chartConfig, setChartConfig] = React.useState<ChartConfig>()
+  const [allUsers, setAllUsers] = React.useState<Array<{ id: string; name: string }>>([])
+  const [key, setKey] = React.useState(0) // Key for forcing chart redraw
 
-  const maxPoints = standingChartData ? Math.max(...standingChartData.map(data => Math.max(...Object.values(data).map(value => Number(value) || 0)))) : 0;
+  // Calculate maxPoints considering selectedPlayers if defined
+  const maxPoints = React.useMemo(() => 
+    standingChartData 
+      ? Math.max(...standingChartData.map(data => 
+          Math.max(...Object.entries(data)
+            .filter(([key]) => !selectedPlayers || selectedPlayers.includes(key))
+            .map(([_, value]) => Number(value) || 0))
+        )) 
+      : 0
+  , [standingChartData, selectedPlayers]);
 
-  // Initial load
+  // Initial data load - only fetch users and standings once
   React.useEffect(() => {
-    const initializeChart = async () => {
+    const loadInitialData = async () => {
       try {
-        const data = await getStandingsChartData();
-        const users = await getUsers();
+        const [users, data] = await Promise.all([
+          getUsers(),
+          getStandingsChartData()
+        ]);
+        
+        setAllUsers(users);
         setStandingCartData(data);
-
-        const chartConfig = users.reduce((prev, cur, index) => ({
-          ...prev, [cur.id]: { label: cur.name, color: interpolateRainbow(index / users.length) }
-        }), {})
-        setChartConfig(chartConfig)
       } catch (error) {
         if (error instanceof Error) {
-          toast({ title: 'Error fetching initial data:', description: error.message, variant: 'destructive' })
+          toast({ 
+            title: 'Error loading initial data:',
+            description: error.message,
+            variant: 'destructive'
+          })
         } else {
-          toast({ title: 'Error fetching initial data', variant: 'destructive' })
+          toast({
+            title: 'Error loading initial data',
+            variant: 'destructive'
+          })
         }
       }
     }
 
-    initializeChart()
-  }, [])
+    loadInitialData();
+  }, []);
+
+  // Update chart config when selectedPlayers changes
+  React.useEffect(() => {
+    if (!allUsers.length) return;
+
+    // Filter users if selectedPlayers is defined
+    const relevantUsers = selectedPlayers 
+      ? allUsers.filter(user => selectedPlayers.includes(user.id))
+      : allUsers;
+
+    // Update chart config with colors only for relevant users
+    const newChartConfig = relevantUsers.reduce((prev, cur, index) => ({
+      ...prev,
+      [cur.id]: {
+        label: cur.name,
+        color: interpolateRainbow(index / relevantUsers.length)
+      }
+    }), {});
+
+    setChartConfig(newChartConfig);
+    setKey(prev => prev + 1); // Force chart redraw
+  }, [selectedPlayers, allUsers]);
 
   return (
     <>
       {chartConfig && standingChartData ? (
-        <ChartContainer config={chartConfig} className={miniture ? 'md:h-96 w-full' : ''}>
+        <ChartContainer 
+          key={key} // Force redraw when key changes
+          config={chartConfig} 
+          className={miniture ? 'md:h-96 w-full' : ''}
+        >
           <LineChart
             accessibilityLayer
             data={standingChartData}
@@ -135,9 +180,7 @@ export default function PointsTrend({ miniture }: PointsTrendProps) {
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent />}
-              itemSorter={(item) => {
-                return Number(item.value)
-              }}
+              itemSorter={(item) => Number(item.value)}
               wrapperStyle={{ zIndex: 100 }}
             />
             {Object.entries(chartConfig).map(([userId, { label, color }]) => (

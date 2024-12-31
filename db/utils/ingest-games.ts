@@ -6,7 +6,7 @@ import games from '@/db/schema/games';
 import picks from '@/db/schema/picks';
 import teams from '@/db/schema/teams';
 import { teamsByYear } from '@/db/consts'
-import { parseDate } from '@/lib/utils';
+import { parseDate, getGamePointValue } from '@/lib/utils';
 import { Game } from '../types';
 
 interface GameApiResponse {
@@ -196,14 +196,7 @@ export async function ingestGames({ year }: {year: number }): Promise<string> {
 }
 
 async function updatePicksPoints(apiGame: GameApiTransformed, dbGame: Game): Promise<void> {
-  let pointsValue = 1;
-  if (dbGame.name?.includes('Quarterfinal')) {
-    pointsValue = 2;
-  } else if (dbGame.name?.includes('Semifinal')) {
-    pointsValue = 3;
-  } else if (dbGame.name?.includes('National Championship')) {
-    pointsValue = 4;
-  }
+  const pointsValue = getGamePointValue(apiGame.name);
   // If the game has a winner, update related picks
   if (apiGame.winningTeamId !== null) {
     await db

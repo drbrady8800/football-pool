@@ -9,7 +9,7 @@ const corsOptions = {
 
 function getAllowedOrigins() {
   if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'development') {
-    return ['http://localhost:3000']
+    return ['http://localhost:3000', 'http://localhost:3001']
   }
   
   return [
