@@ -16,6 +16,7 @@ interface LeaderboardProps {
   userCount?: number;
   standingsOverride?: Array<Standing>;
   loading?: boolean;
+  sortBy?: 'total' | 'max';
 }
 
 function LeaderboardSkeleton({ count = 5 }: { count?: number }) {
@@ -26,7 +27,6 @@ function LeaderboardSkeleton({ count = 5 }: { count?: number }) {
           key={i}
           className="flex items-center justify-between p-4 rounded-lg border bg-card"
         >
-          {/* Rank & User Info */}
           <div className="flex items-center gap-4">
             <Skeleton className="w-8 h-8 rounded-full" />
             <Skeleton className="hidden md:block h-10 w-10 rounded-full" />
@@ -34,9 +34,10 @@ function LeaderboardSkeleton({ count = 5 }: { count?: number }) {
               <Skeleton className="h-5 w-24" />
             </div>
           </div>
-
-          {/* Points Badge */}
-          <Skeleton className="h-6 w-20" />
+          <div className="flex flex-col items-end gap-2">
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-6 w-24" />
+          </div>
         </div>
       ))}
     </div>
@@ -48,12 +49,12 @@ export default function Leaderboard({
   gameCount, 
   userCount,
   standingsOverride,
-  loading: loadingProp = false
+  loading: loadingProp = false,
+  sortBy = 'total'
 }: LeaderboardProps) {
   const [standings, setStandings] = React.useState<Array<Standing>>([])
   const [loading, setLoading] = React.useState<boolean>(false)
 
-  // Initial load - only if we don't have standingsOverride
   React.useEffect(() => {
     if (standingsOverride) return;
 
@@ -82,7 +83,6 @@ export default function Leaderboard({
     initializeLeaderboard()
   }, [gameCount, standingsOverride])
   
-  // Use override standings if provided, otherwise use fetched standings
   const displayStandings = standingsOverride || standings;
   const isLoading = loadingProp || loading;
 
@@ -90,17 +90,37 @@ export default function Leaderboard({
     return <LeaderboardSkeleton count={userCount ?? 5} />
   }
 
+  // Sort by total points to determine overall rankings
+  const totalPointsStandings = [...displayStandings].sort((a, b) => b.points - a.points);
+  
+  // Create the sorted list based on selected sort method
+  const sortedStandings = [...displayStandings].sort((a, b) => {
+    if (sortBy === 'max' && a.maxPoints && b.maxPoints) {
+      return b.maxPoints - a.maxPoints
+    }
+    return b.points - a.points
+  })
+
   return (
     <div className="space-y-4">
-      {displayStandings
-        .sort((a, b) => b.points - a.points)
+      {sortedStandings
         .slice(0, userCount)
         .map((standing, index) => {
-          const isInFirstPlace = isFirstPlace(standing, displayStandings)
-          const isInLastPlace = isLastPlace(standing, displayStandings)
-          const previousPlayer = index > 0 ? displayStandings[index - 1] : null
-          const displayRank = previousPlayer && previousPlayer.points === standing.points
-            ? displayStandings.findIndex(s => s.points === standing.points) + 1
+          // Always determine first/last place based on total points
+          const isInFirstPlace = isFirstPlace(standing, totalPointsStandings)
+          const isInLastPlace = isLastPlace(standing, totalPointsStandings)
+          
+          // Calculate display rank based on current sort method
+          const previousPlayer = index > 0 ? sortedStandings[index - 1] : null
+          const displayRank = previousPlayer && 
+            (sortBy === 'max' 
+              ? previousPlayer.maxPoints === standing.maxPoints
+              : previousPlayer.points === standing.points)
+            ? sortedStandings.findIndex(s => 
+                sortBy === 'max' 
+                  ? s.maxPoints === standing.maxPoints
+                  : s.points === standing.points
+              ) + 1
             : index + 1
 
           return (
@@ -110,7 +130,6 @@ export default function Leaderboard({
               className="block"
             >
               <div className="flex items-center justify-between p-4 border bg-card hover:bg-accent/50 transition-colors rounded-lg cursor-pointer">
-                {/* Rank & User Info */}
                 <div className="flex items-center gap-4">
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
                     <span className="text-sm font-bold">
@@ -136,19 +155,28 @@ export default function Leaderboard({
                   )}
                 </div>
 
-                {/* Points */}
-                <Badge 
-                  variant={
-                    isInFirstPlace 
-                      ? "success"
-                      : isInLastPlace 
-                        ? "destructive" 
-                        : "secondary"
-                  }
-                  className="text-sm"
-                >
-                  {standing.points} points
-                </Badge>
+                <div className="flex flex-col items-end gap-2">
+                  <Badge 
+                    variant={
+                      isInFirstPlace 
+                        ? "success"
+                        : isInLastPlace 
+                          ? "destructive" 
+                          : "secondary"
+                    }
+                    className="text-sm"
+                  >
+                    {standing.points} points
+                  </Badge>
+                  {standing.maxPoints && (
+                    <Badge 
+                      variant="outline"
+                      className="text-sm"
+                    >
+                      Max: {standing.maxPoints} points
+                    </Badge>
+                  )}
+                </div>
               </div>
             </Link>
           )

@@ -1,9 +1,9 @@
 export type Standing = {
   userId: string;
   name: string;
-  correctPicks: number;
   totalPicks: number;
   points: number;
+  maxPoints?: number;
 }
 
 export type StandingChartColumn = {

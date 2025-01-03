@@ -18,6 +18,7 @@ export default function PredictionsPage() {
   const [games, setGames] = React.useState<Array<GameWithTeams>>([]);
   const [standings, setStandings] = React.useState<Array<Standing>>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [initialized, setInitialized] = React.useState<boolean>(false);
   const [predictions, setPredictions] = React.useState<Record<string, string>>({});
   const [hypotheticalStandings, setHypotheticalStandings] = React.useState<Array<Standing>>([]);
 
@@ -48,6 +49,7 @@ export default function PredictionsPage() {
         }
       } finally {
         setLoading(false);
+        setInitialized(true);
       }
     };
     initialize();
@@ -127,8 +129,9 @@ export default function PredictionsPage() {
       {/* Desktop Layout */}
       <div className="flex flex-col-reverse lg:flex-row gap-8">
         <GameList 
-          games={activeGames} 
-          isLoading={loading} 
+          games={activeGames}
+          isLoading={loading}
+          isInitialized={initialized}
           title="Predictions" 
           predictionMode={true}
           predictions={predictions}

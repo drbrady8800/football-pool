@@ -6,7 +6,7 @@ import { ArrowRight } from 'lucide-react';
 
 import { getGameById } from '@/lib/api/games';
 import { getPicks } from '@/lib/api/picks';
-import GameCard from '@/components/game-card';
+import { GameCardSkeleton, InfoGameCard } from '@/components/game-card';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type GameWithTeams, type PickWithGameTeamUser } from '@/db/types';
@@ -58,7 +58,7 @@ export default function GameIdPage({
         <Card>
           <CardContent className="p-8">
             <div className="space-y-4">
-              <Skeleton className="h-32 w-full mb-8" />
+              <GameCardSkeleton isHeader={true} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <Skeleton className="h-8 w-1/2" />
@@ -135,7 +135,7 @@ export default function GameIdPage({
       <div className="w-full max-w-4xl mx-auto px-4 space-y-8">
         <Card>
           <CardHeader className="pb-0">
-            <GameCard game={game} isHeader={true} />
+            <InfoGameCard game={game} isHeader={true} />
           </CardHeader>
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -210,7 +210,7 @@ export default function GameIdPage({
     <div className="w-full max-w-4xl mx-auto px-4 space-y-8">
       <Card>
         <CardHeader className="pb-0">
-          <GameCard game={game} isHeader={true} />
+          <InfoGameCard game={game} isHeader={true} />
         </CardHeader>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

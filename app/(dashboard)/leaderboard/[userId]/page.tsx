@@ -1,20 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPicks } from '@/lib/api/picks';
-import { getStandings } from '@/lib/api/standings';
-import { isLastPlace, isFirstPlace } from '@/lib/utils';
+
+import { type PickWithGameTeamUser } from '@/db/types';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import GameCard, { GameCardSkeleton } from '@/components/game-card';
+import { PlayerGameCard, GameCardSkeleton } from '@/components/game-card';
+
+import { getEliminatedCFPTeams } from '@/lib/api/teams';
+import { getPicks } from '@/lib/api/picks';
+import { getStandings } from '@/lib/api/standings';
+import { isLastPlace, isFirstPlace } from '@/lib/utils'; 
 
 function LoadingState() {
   return (
     <Card>
-      <CardHeader className="flex flex-row gap-4 items-center">
+      <CardHeader className="flex md:flex-row flex-col gap-4 md:items-center justify-between">
         <Skeleton className="h-8 w-48" /> {/* Name */}
-        <Skeleton className="h-6 w-24" /> {/* Points Badge */}
+        <div className='flex md:flex-row flex-col gap-4'>
+          <Skeleton className="h-6 w-20" /> {/* Points Badge */}
+          <Skeleton className="h-6 w-24" /> {/* Max Points Badge */}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
@@ -33,8 +40,9 @@ export default function PersonPage({
   params: { userId: string };
 }) {
   const userId = params.userId;
-  const [picks, setPicks] = useState<any[]>([]);
+  const [picks, setPicks] = useState<PickWithGameTeamUser[]>([]);
   const [standings, setStandings] = useState<any[]>([]);
+  const [eliminatedTeams, setEliminatedTeams] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,9 +50,10 @@ export default function PersonPage({
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const [picksData, standingsData] = await Promise.all([
+        const [picksData, standingsData, eliminatedTeamsData] = await Promise.all([
           getPicks({ userId }),
-          getStandings({})
+          getStandings({}),
+          getEliminatedCFPTeams(),
         ]);
 
         // Sort picks by game date
@@ -54,6 +63,7 @@ export default function PersonPage({
 
         setPicks(sortedPicks || []);
         setStandings(standingsData || []);
+        setEliminatedTeams(eliminatedTeamsData || []);
       } catch (err) {
         setError('Failed to load data');
         console.error('Error fetching data:', err);
@@ -92,37 +102,58 @@ export default function PersonPage({
   return (
     <div className="w-full mx-auto px-4 space-y-8">
       <Card>
-        <CardHeader className="flex flex-row gap-4 items-center">
-          <CardTitle>{userInfo?.name}'s Picks</CardTitle>
+      <CardHeader>
+        <div className="space-y-4">
+          {/* Title row */}
+          <div className="flex flex-row items-center justify-between">
+            <div className="flex flex-row items-center gap-4">
+              <CardTitle>{userInfo?.name}'s Picks</CardTitle>
+              {isInFirstPlace && (
+                <span className="text-2xl" role="img" aria-label="Crown">
+                  👑
+                </span>
+              )}
+              {isInLastPlace && (
+                <span className="text-2xl" role="img" aria-label="Last Place">
+                  🚽       
+                </span>
+              )}
+            </div>
+            {userInfo && (
+              <div className="flex-col sm:flex-row gap-4 hidden sm:flex">
+                <Badge className="text-base sm:text-sm w-fit">
+                  {userInfo.points} points
+                </Badge>
+                <Badge variant="secondary" className="text-base sm:text-sm w-fit">
+                  Max: {userInfo.maxPoints} points
+                </Badge>
+              </div>
+            )}
+          </div>
+          
+          {/* Points row - stack on mobile, horizontal on desktop */}
           {userInfo && (
-            <Badge className="text-sm">
-              {userInfo.points} points
-            </Badge>
+            <div className="flex flex-col sm:flex-row gap-4 sm:hidden">
+              <Badge className="text-base sm:text-sm w-fit">
+                {userInfo.points} points
+              </Badge>
+              <Badge variant="secondary" className="text-base sm:text-sm w-fit">
+                Max: {userInfo.maxPoints} points
+              </Badge>
+            </div>
           )}
-          {isInFirstPlace && (
-            <span className="text-2xl m-0" role="img" aria-label="Crown">
-              👑
-            </span>
-          )}
-          {isInLastPlace && (
-            <span className="text-2xl m-0" role="img" aria-label="Last Place">
-              🚽       
-            </span>
-          )}
-        </CardHeader>
+        </div>
+      </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
             {picks && picks.length > 0 ? (
               picks.map(pick => {
-                const game = pick.game;
-                if (!game.homeTeam || !game.awayTeam) {
-                  game.homeTeam = pick.winningTeam;
-                  game.awayTeam = pick.losingTeam;
-                }
                 return (
-                  <GameCard 
-                    game={game} 
-                    winningTeamId={pick.winningTeamId} 
+                  <PlayerGameCard
+                    game={pick.game} 
+                    selectedWinningTeam={pick.winningTeam}
+                    selectedLosingTeam={pick.losingTeam}
+                    eliminatedTeams={eliminatedTeams}
                     key={pick.id} 
                   />
                 );

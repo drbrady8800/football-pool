@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 export default function GamesPage() {
   const [games, setGames] = React.useState<Array<GameWithTeams>>([])
   const [loading, setLoading] = React.useState<boolean>(false)
+  const [initialized, setInitialized] = React.useState<boolean>(false)
 
   // Initial load
   React.useEffect(() => {
@@ -26,6 +27,7 @@ export default function GamesPage() {
         }
       } finally {
         setLoading(false)
+        setInitialized(true)
       }
     }
     initializeGames()
@@ -37,8 +39,8 @@ export default function GamesPage() {
 
   return (
     <div className="w-full mx-auto px-4 space-y-8">
-      <GameList games={activeGames} isLoading={loading} title="Upcoming Games" />
-      <GameList games={completedGames} isLoading={loading} title="Completed Games" />
+      <GameList games={activeGames} isLoading={loading} isInitialized={initialized} title="Upcoming Games" />
+      <GameList games={completedGames} isLoading={loading} isInitialized={initialized} title="Completed Games" />
     </div>
   );
 }

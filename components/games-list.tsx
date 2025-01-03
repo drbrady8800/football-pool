@@ -1,13 +1,14 @@
 "use client"
 import React from 'react';
 import { GameWithTeams } from '@/db/types';
-import GameCard, { GameCardSkeleton } from '@/components/game-card';
+import { InfoGameCard, GameCardSkeleton, PickableGameCard } from '@/components/game-card';
 import CarderHeaderWithLink from './card-header-link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface GamesListProps {
   games: GameWithTeams[];
   isLoading: boolean;
+  isInitialized: boolean;
   title: string;
   href?: string;
   predictionMode?: boolean;
@@ -26,8 +27,9 @@ function GamesListSkeleton({ predictionMode = false }: { predictionMode?: boolea
 }
 
 export default function GamesList({ 
-  games, 
-  isLoading, 
+  games,
+  isLoading,
+  isInitialized,
   title, 
   href,
   predictionMode = false,
@@ -52,21 +54,27 @@ export default function GamesList({
           </CardHeader>
         )}
         <CardContent>
-          {isLoading || games.length === 0 ? (
+          {isLoading || !isInitialized ? (
             <GamesListSkeleton predictionMode={predictionMode}/>
           ) : (
             <div className={`${!predictionMode ? "xl:grid-cols-2" : ""} grid grid-cols-1 gap-6 justify-items-center`}>
               {games
                 .sort((a, b) => a.gameDate < b.gameDate ? -1 : 1)
-                .map(game => (
-                  <GameCard 
-                    game={game} 
-                    key={game.id}
-                    predictionMode={predictionMode}
-                    winningTeamId={predictions[game.id]}
-                    onPredictionSelect={(teamId) => handlePredictionSelect(game.id, teamId)}
-                  />
-                ))
+                .map(game => {
+                  return predictionMode ? (
+                    <PickableGameCard
+                      game={game}
+                      key={game.id}
+                      selectedTeamId={predictions[game.id] || undefined}
+                      onTeamSelect={(teamId) => handlePredictionSelect(game.id, teamId)}
+                    />
+                  ) : (
+                    <InfoGameCard 
+                      game={game} 
+                      key={game.id}
+                    />
+                  )}
+                )
               }
             </div>
           )}

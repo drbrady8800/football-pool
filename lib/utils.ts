@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 import { type Standing } from "@/lib/types"
+import { type GameWithTeams, type PickWithGameTeamUser } from "@/db/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -58,4 +59,20 @@ export const getGamePointValue = (gameName: string | null): number => {
     return 2;
   }
   return 1;
-};
+}; 
+
+export const getMaxPoints = ({ currentPoints, picks, eliminatedTeamIds }: { currentPoints: number, picks: PickWithGameTeamUser[], eliminatedTeamIds: string[] }): number => {
+  if (!picks || !eliminatedTeamIds) return currentPoints;
+  let maxPoints = currentPoints + 4; // Add 4 points for the National Championship score tiebreaker
+  for (const pick of picks) {
+    if (!pick.game) {
+      continue;
+    }
+    const gameName = pick.game.name;
+    const gamePointValue = getGamePointValue(gameName);
+    if (!eliminatedTeamIds.includes(pick.winningTeam.id)) {
+      maxPoints += gamePointValue;
+    }
+  }
+  return maxPoints;
+}

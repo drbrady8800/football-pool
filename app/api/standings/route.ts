@@ -1,4 +1,4 @@
-import { and, eq, sql, desc, isNull, like } from "drizzle-orm";
+import { and, eq, sql, desc, like } from "drizzle-orm";
 import { NextRequest } from 'next/server';
 
 import db from "@/db/db";
@@ -6,8 +6,9 @@ import games from "@/db/schema/games";
 import picks from "@/db/schema/picks";
 import users from "@/db/schema/users";
 import scorePredictions from "@/db/schema/scorePredictions";
-import { getBowlYear, getGamePointValue } from "@/lib/utils";
+import { getBowlYear, getGamePointValue, getMaxPoints } from "@/lib/utils";
 import { type Standing } from "@/lib/types";
+import { GameWithTeams, PickWithGameTeamUser } from "@/db/types";
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
   const numGames = searchParams.get('numGames') ? parseInt(searchParams.get('numGames')!) : null;
 
   try {
-    // First get the game dates we want to include, add a second to the end date to include the last game
+    // First get the game dates we want to include
     const gameLimit = numGames ? await db
       .select({ gameDate: games.gameDate })
       .from(games)
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
         return new Date(new Date(lastDate).getTime() + 1000).toISOString();
       }) : null;
 
-    // Check if championship game is complete and get its scores
+    // Get championship game info
     const championshipGame = await db
       .select({
         id: games.id,
@@ -51,6 +52,7 @@ export async function GET(request: NextRequest) {
     let predictionPoints: Record<string, number> = {};
     
     if (champGame?.isComplete) {
+      // Calculate prediction points
       const actualTotal = (champGame.homeTeamScore || 0) + (champGame.awayTeamScore || 0);
       
       // Get all predictions for championship game
@@ -60,9 +62,7 @@ export async function GET(request: NextRequest) {
           score: scorePredictions.score,
         })
         .from(scorePredictions)
-        .where(
-          eq(scorePredictions.season, season),
-        );
+        .where(eq(scorePredictions.season, season));
 
       // Calculate differences and find the closest prediction
       const predictionsWithDiff = predictions.map(pred => ({
@@ -77,23 +77,70 @@ export async function GET(request: NextRequest) {
       // Award points based on prediction accuracy
       predictionPoints = predictionsWithDiff.reduce((acc, pred) => {
         if (pred.difference === closestDiff) {
-          acc[pred.userId] = 4; // Closest prediction
+          acc[pred.userId] = 4;
         } else if (pred.difference <= 5) {
-          acc[pred.userId] = 3; // Within 5 points
+          acc[pred.userId] = 3;
         } else if (pred.difference <= 10) {
-          acc[pred.userId] = 2; // Within 10 points
+          acc[pred.userId] = 2;
         } else {
           acc[pred.userId] = 0;
         }
         return acc;
       }, {} as Record<string, number>);
     }
+
+
+    // Get all remaining games and picks
+    const allPicks: PickWithGameTeamUser[] = await db.query.picks.findMany({
+      with: {
+        game: {
+          where: and(
+            eq(games.season, season),
+            gameLimit ? sql`${games.gameDate} >= ${gameLimit}` : eq(games.isComplete, false),
+          ),
+          with: {
+            homeTeam: true,
+            awayTeam: true,
+          },
+        },
+        winningTeam: true,
+        losingTeam: true,
+        user: true,
+      },
+    });
+
+    // Get eliminated teams
+    const eliminatedTeams = await db
+      .select({
+        homeTeamId: games.homeTeamId,
+        awayTeamId: games.awayTeamId,
+        winningTeamId: games.winningTeamId,
+      })
+      .from(games)
+      .where(
+        and(
+          eq(games.season, season),
+          eq(games.isComplete, true),
+          like(games.name, "%College Football Playoff%")
+        )
+      );
+
+    const eliminatedTeamIds = eliminatedTeams.reduce((acc: string[], game: GameWithTeams) => {
+      if (game.homeTeamId && game.homeTeamId !== game.winningTeamId) {
+        acc.push(game.homeTeamId);
+      }
+      if (game.awayTeamId && game.awayTeamId !== game.winningTeamId) {
+        acc.push(game.awayTeamId);
+      }
+      return acc;
+    }, []);
     
-    const standings = await db
+    // Calculate standings with max points
+    const standings: Standing[] = await db
       .select({
         userId: users.id,
         name: users.name,
-        correctPicks: sql<number>`sum(${picks.pointsEarned})`,
+        points: sql<number>`sum(${picks.pointsEarned})`,
         totalPicks: sql<number>`count(*)`,
       })
       .from(users)
@@ -107,19 +154,27 @@ export async function GET(request: NextRequest) {
         )
       )
       .groupBy(users.id)
-      .orderBy(
-        desc(sql`sum(${picks.pointsEarned})`),
-      );
+      .orderBy(desc(sql`sum(${picks.pointsEarned})`));
 
     return Response.json({
-      standings: standings.map((standing: Standing) => ({
-        userId: standing.userId,
-        name: standing.name,
-        correctPicks: Number(standing.correctPicks) || 0,
-        totalPicks: Number(standing.totalPicks) || 0,
-        points: (Number(standing.correctPicks) || 0) + (predictionPoints[standing.userId] || 0),
-        predictionPoints: predictionPoints[standing.userId] || 0
-      }))
+      standings: standings.map((standing) => {
+        const userPicks = allPicks.filter(pick => pick.userId === standing.userId);
+        const currentPoints = Number(standing.points) + (predictionPoints[standing.userId] || 0) || 0;
+        const maxPoints = getMaxPoints({
+          currentPoints,
+          picks: userPicks,
+          eliminatedTeamIds,
+        });
+
+        return {
+          userId: standing.userId,
+          name: standing.name,
+          totalPicks: Number(standing.totalPicks) || 0,
+          points: currentPoints + (predictionPoints[standing.userId] || 0),
+          predictionPoints: predictionPoints[standing.userId] || 0,
+          maxPoints,
+        };
+      })
     });
   } catch (error) {
     console.error('Error calculating standings:', error);
@@ -155,13 +210,13 @@ export async function POST(request: NextRequest) {
     const baseStandings: {
       userId: string;
       name: string;
-      correctPicks: number;
+      points: number;
       totalPicks: number;
     }[] = await db
       .select({
         userId: users.id,
         name: users.name,
-        correctPicks: sql<number>`sum(${picks.pointsEarned})`,
+        points: sql<number>`sum(${picks.pointsEarned})`,
         totalPicks: sql<number>`count(*)`,
       })
       .from(users)
@@ -196,7 +251,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate hypothetical points for each user
     const hypotheticalStandings = baseStandings.map((standing) => {
-      let hypotheticalPoints = Number(standing.correctPicks) || 0;
+      let hypotheticalPoints = Number(standing.points) || 0;
       let totalPicks = Number(standing.totalPicks) || 0;
 
       // Check each prediction against user's pick
@@ -219,7 +274,6 @@ export async function POST(request: NextRequest) {
       return {
         userId: standing.userId,
         name: standing.name,
-        correctPicks: hypotheticalPoints,
         totalPicks,
         points: hypotheticalPoints, // Add any additional scoring logic here
         predictionPoints: 0 // Could be used for championship prediction points

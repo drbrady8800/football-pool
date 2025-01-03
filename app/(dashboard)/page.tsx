@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation"
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   Select,
@@ -34,6 +32,7 @@ export default function HomePage() {
   const [users, setUsers] = React.useState<User[]>([])
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null)
   const [loading, setLoading] = React.useState(false)
+  const [initialized, setInitialized] = React.useState(false)
 
   React.useEffect(() => {
     const initializeData = async () => {
@@ -56,6 +55,7 @@ export default function HomePage() {
         }
       } finally {
         setLoading(false)
+        setInitialized(true)
       }
     }
     initializeData()
@@ -96,7 +96,7 @@ export default function HomePage() {
           <PointsTrend miniture={true} />
         </CardContent>
       </Card>
-      <GamesList games={games} isLoading={loading} title="Today's Games" href="/games"/>
+      <GamesList games={games} isLoading={loading} isInitialized={initialized} title="Today's Games" href="/games"/>
     </>
   );
 }

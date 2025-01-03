@@ -137,7 +137,6 @@ async function getExistingGame(homeTeamId: string, awayTeamId: string, gameDate:
         and(
           eq(games.homeTeamId, homeTeamId),
           eq(games.awayTeamId, awayTeamId),
-          eq(games.gameDate, gameDate)
         ),
         and(
           eq(games.name, name),
@@ -223,6 +222,7 @@ export async function updateGames({ year }: {year: number }): Promise<string> {
     teamsForGivenYear.includes(game.away_team)
   );
 
+
   // Process games in smaller batches
   const batchSize = 10;
   let foundCount = 0;
@@ -255,7 +255,7 @@ export async function updateGames({ year }: {year: number }): Promise<string> {
           await db
             .update(games)
             .set(game)
-            .where(eq(games.id, currentGame.id)); // Update by ID instead of composite key
+            .where(eq(games.id, currentGame.id));
           changedCount++;
         }
 
