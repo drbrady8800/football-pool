@@ -33,13 +33,13 @@ export async function getStandingsChartData(): Promise<StandingChartColumn[]> {
   return data;
 }
 
-export async function getHypotheticalStandings(predictions: Record<string, string>): Promise<Standing[]> {
+export async function getHypotheticalStandings(predictions: Record<string, string>, totalScorePrediction?: number): Promise<Standing[]> {
   const response = await fetch(`${getApiUrl()}/standings`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ predictions }),
+    body: JSON.stringify({ predictions, totalScorePrediction }),
   });
 
   if (!response.ok) {

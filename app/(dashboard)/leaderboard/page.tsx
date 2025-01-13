@@ -47,7 +47,7 @@ export default function LeaderboardPage() {
           <div>
             <CardTitle className="text-2xl font-bold">Leaderboard</CardTitle>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-col md:flex-row">
             <Select
               value={sortBy}
               onValueChange={(value: 'total' | 'max') => setSortBy(value)}

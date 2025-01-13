@@ -20,6 +20,7 @@ export default function PredictionsPage() {
   const [loading, setLoading] = React.useState<boolean>(false);
   const [initialized, setInitialized] = React.useState<boolean>(false);
   const [predictions, setPredictions] = React.useState<Record<string, string>>({});
+  const [scorePredictions, setScorePredictions] = React.useState<Record<string, { homeScore: number; awayScore: number }>>({});
   const [hypotheticalStandings, setHypotheticalStandings] = React.useState<Array<Standing>>([]);
 
   // Initial load
@@ -64,7 +65,15 @@ export default function PredictionsPage() {
       }
 
       try {
-        const newStandings = await getHypotheticalStandings(predictions);
+        let newStandings: Standing[] = [];
+        let totalScorePrediction: number | undefined;
+        if (Object.keys(scorePredictions).length === 1) {
+          const scoresObject = Object.values(scorePredictions)[0];
+          if (typeof scoresObject?.homeScore === 'number' || typeof scoresObject?.awayScore === 'number') {
+            totalScorePrediction = (scoresObject?.homeScore || 0) + (scoresObject?.awayScore || 0);
+          }
+        }
+        newStandings = await getHypotheticalStandings(predictions, totalScorePrediction);
         setHypotheticalStandings(newStandings);
       } catch (error) {
         if (error instanceof Error) {
@@ -79,7 +88,7 @@ export default function PredictionsPage() {
     };
 
     updateHypotheticalStandings();
-  }, [predictions, standings]);
+  }, [predictions, standings, scorePredictions]);
 
   // Handle prediction selection
   const handlePredictionSelect = async (gameId: string, teamId: string) => {
@@ -121,6 +130,13 @@ export default function PredictionsPage() {
       }
     }
   };
+
+  const handleScorePrediction = (gameId: string, scores: { homeScore: number; awayScore: number }) => {
+    setScorePredictions(prev => ({
+      ...prev,
+      [gameId]: scores
+    }));
+  };
   
   const activeGames = games.filter(game => !game.isComplete);
 
@@ -136,6 +152,7 @@ export default function PredictionsPage() {
           predictionMode={true}
           predictions={predictions}
           onPredictionSelect={handlePredictionSelect}
+          onScorePrediction={handleScorePrediction}
         />
         <Card className="flex-shrink-0">
           <CardHeader>

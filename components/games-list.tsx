@@ -1,9 +1,11 @@
 "use client"
 import React from 'react';
 import { GameWithTeams } from '@/db/types';
-import { InfoGameCard, GameCardSkeleton, PickableGameCard } from '@/components/game-card';
-import CarderHeaderWithLink from './card-header-link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import CarderHeaderWithLink from '@/components/card-header-link';
+import { InfoGameCard, GameCardSkeleton, PickableGameCard } from '@/components/game-card';
+import ScorePredictionForm from '@/components/score-prediction-form';
+
 
 interface GamesListProps {
   games: GameWithTeams[];
@@ -14,6 +16,7 @@ interface GamesListProps {
   predictionMode?: boolean;
   predictions?: Record<string, string>; // gameId -> teamId mapping
   onPredictionSelect?: (gameId: string, teamId: string) => void;
+  onScorePrediction?: (gameId: string, scores: { homeScore: number; awayScore: number }) => void;
 }
 
 function GamesListSkeleton({ predictionMode = false }: { predictionMode?: boolean }) {
@@ -34,7 +37,8 @@ export default function GamesList({
   href,
   predictionMode = false,
   predictions = {},
-  onPredictionSelect
+  onPredictionSelect,
+  onScorePrediction,
 }: GamesListProps) {
   // Handler for team selection in prediction mode
   const handlePredictionSelect = (gameId: string, teamId: string) => {
@@ -42,6 +46,12 @@ export default function GamesList({
       onPredictionSelect(gameId, teamId);
     }
   };
+
+  // Sort games by date
+  const sortedGames = [...games].sort((a, b) => a.gameDate < b.gameDate ? -1 : 1);
+  
+  // Get the last game for score predictions
+  const lastGame = sortedGames[sortedGames.length - 1];
 
   return (
     <div className="w-full mx-auto space-y-8">
@@ -57,25 +67,33 @@ export default function GamesList({
           {isLoading || !isInitialized ? (
             <GamesListSkeleton predictionMode={predictionMode}/>
           ) : (
-            <div className={`${!predictionMode ? "xl:grid-cols-2" : ""} grid grid-cols-1 gap-6 justify-items-center`}>
-              {games
-                .sort((a, b) => a.gameDate < b.gameDate ? -1 : 1)
-                .map(game => {
+            <div className="space-y-6">
+              <div className={`${!predictionMode ? "xl:grid-cols-2" : ""} grid grid-cols-1 gap-6 justify-items-center`}>
+                {sortedGames.map(game => {
                   return predictionMode ? (
-                    <PickableGameCard
-                      game={game}
-                      key={game.id}
-                      selectedTeamId={predictions[game.id] || undefined}
-                      onTeamSelect={(teamId) => handlePredictionSelect(game.id, teamId)}
-                    />
+                    <div key={game.id} className="w-full">
+                      <PickableGameCard
+                        game={game}
+                        selectedTeamId={predictions[game.id] || undefined}
+                        onTeamSelect={(teamId) => handlePredictionSelect(game.id, teamId)}
+                      />
+                      {game.id === lastGame?.id && onScorePrediction && (
+                        <ScorePredictionForm
+                          game={game}
+                          onScorePrediction={onScorePrediction}
+                          selectedTeamId={predictions[game.id]}
+                          onTeamSelect={(teamId) => handlePredictionSelect(game.id, teamId)}
+                        />
+                      )}
+                    </div>
                   ) : (
                     <InfoGameCard 
                       game={game} 
                       key={game.id}
                     />
-                  )}
-                )
-              }
+                  )
+                })}
+              </div>
             </div>
           )}
         </CardContent>

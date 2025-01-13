@@ -3,6 +3,8 @@ export type Standing = {
   name: string;
   totalPicks: number;
   points: number;
+  predictionPoints: number;
+  predictionDifference?: number;
   maxPoints?: number;
 }
 
