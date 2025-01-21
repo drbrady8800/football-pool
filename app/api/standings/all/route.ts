@@ -76,17 +76,21 @@ export async function GET() {
           game: row.gameName,
         };
       }
-
+    
       if (currentStanding) {
         currentStanding[row.userId] = row.cumulativePoints;
       }
-    });  
-
-    // Get the prediction points for the championship game
+    });
+    
+    // Always push the last standing after the loop
+    if (currentStanding) {
+      gameStandings.push(currentStanding);
+    }
+    
+    // Then handle prediction points
     const predictionPoints = await calculatePredictionPoints(season);
     if (Object.keys(predictionPoints).length > 0) {
       const championshipGame = gameStandings[gameStandings.length - 1];
-      // Add the prediction points to the championship game
       const scoreStanding: StandingChartColumn = {
         game: 'Tie Breaker',
       };
@@ -95,11 +99,6 @@ export async function GET() {
         scoreStanding[userId] = totalPoints;
       }
       gameStandings.push(scoreStanding);
-    } else {
-      // Don't forget to push the last standing
-      if (currentStanding) {
-        gameStandings.push(currentStanding);
-      }  
     }
 
     return Response.json(gameStandings);

@@ -63,7 +63,11 @@ export const getGamePointValue = (gameName: string | null): number => {
 
 export const getMaxPoints = ({ currentPoints, picks, eliminatedTeamIds }: { currentPoints: number, picks: PickWithGameTeamUser[], eliminatedTeamIds: string[] }): number => {
   if (!picks || !eliminatedTeamIds) return currentPoints;
-  let maxPoints = currentPoints + 4; // Add 4 points for the National Championship score tiebreaker
+  let maxPoints = currentPoints;
+  // Add 4 points for the National Championship score tiebreaker if it hasn't been played yet
+  if (eliminatedTeamIds.length < 11) {
+    maxPoints += 4;
+  }
   for (const pick of picks) {
     if (!pick.game) {
       continue;

@@ -55,6 +55,8 @@ export default function Leaderboard({
   const [standings, setStandings] = React.useState<Array<Standing>>([])
   const [loading, setLoading] = React.useState<boolean>(false)
 
+  const allGameCompleted = standings.every(standing => standing.maxPoints === standing.points);
+
   React.useEffect(() => {
     if (standingsOverride) return;
 
@@ -168,7 +170,7 @@ export default function Leaderboard({
                   >
                     {standing.points} points
                   </Badge>
-                  {standing.maxPoints && (
+                  {standing.maxPoints && !allGameCompleted && (
                     <Badge 
                       variant="outline"
                       className="text-sm"

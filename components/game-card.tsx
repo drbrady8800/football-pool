@@ -297,7 +297,7 @@ export function PlayerGameCard({
     status = 'incorrect';
   }
 
-  if (eliminatedTeams.includes(selectedWinningTeam.id)) {
+  if (eliminatedTeams.includes(selectedWinningTeam.id) && !game.isComplete) {
     forceIncorrectPick = true;
     status = 'incorrect';
   }
