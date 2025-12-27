@@ -18,48 +18,30 @@ import CarderHeaderWithLink from "@/components/card-header-link";
 import GamesList from "@/components/games-list";
 import Leaderboard from "@/components/leaderboard";
 import PointsTrend from "@/components/points-trend";
-import { toast } from "@/hooks/use-toast";
-
-import { getGames } from "@/lib/api/games";
-import { getUsers } from "@/lib/api/users";
-import { type GameWithTeams, type User } from "@/db/types";
+import { useYear } from "@/lib/contexts/year-context";
+import { useGames } from "@/lib/api/hooks/use-games";
+import { useUsers } from "@/lib/api/hooks/use-users";
+import { type User } from "@/db/types";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 export default function HomePage() {
   const router = useRouter()
-  const [games, setGames] = React.useState<GameWithTeams[]>([])
-  const [users, setUsers] = React.useState<User[]>([])
+  const { year } = useYear()
+  const { data: allGames = [], isLoading: gamesLoading } = useGames(year)
+  const { data: users = [], isLoading: usersLoading } = useUsers(year)
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null)
-  const [loading, setLoading] = React.useState(false)
-  const [initialized, setInitialized] = React.useState(false)
 
   React.useEffect(() => {
-    const initializeData = async () => {
-      try {
-        setLoading(true)
-        // Then fetch initial standings
-        const initialGames = await getGames()
-        const initialUsers = await getUsers()
-
-        const today = new Date()
-        // Check if the game is happening or has happened today
-        setGames(initialGames.filter(game => new Date(game.gameDate).toDateString() === today.toDateString()))
-        setUsers(initialUsers)
-        setSelectedUser(initialUsers[0])
-      } catch (error) {
-        if (error instanceof Error) {
-          toast({ title: 'Error fetching games:', description: error.message, variant: 'destructive' })
-        } else {
-          toast({ title: 'Error fetching games', variant: 'destructive' })
-        }
-      } finally {
-        setLoading(false)
-        setInitialized(true)
-      }
+    if (users.length > 0 && !selectedUser) {
+      setSelectedUser(users[0])
     }
-    initializeData()
-  }, [])
+  }, [users, selectedUser])
+
+  const today = new Date()
+  const games = allGames.filter(game => new Date(game.gameDate).toDateString() === today.toDateString())
+  const loading = gamesLoading || usersLoading
+  const initialized = !gamesLoading && !usersLoading
 
   return (
     <>

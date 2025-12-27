@@ -5,10 +5,10 @@ import React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getStandings } from "@/lib/api/standings"
+import { useYear } from "@/lib/contexts/year-context"
+import { useStandings } from "@/lib/api/hooks/use-standings"
 import { type Standing } from "@/lib/types"
 import { isLastPlace, isFirstPlace } from '@/lib/utils';
-import { toast } from "@/hooks/use-toast"
 
 interface LeaderboardProps {
   condensed?: boolean;
@@ -52,41 +52,13 @@ export default function Leaderboard({
   loading: loadingProp = false,
   sortBy = 'total'
 }: LeaderboardProps) {
-  const [standings, setStandings] = React.useState<Array<Standing>>([])
-  const [loading, setLoading] = React.useState<boolean>(false)
+  const { year } = useYear()
+  const { data: standings = [], isLoading: standingsLoading } = useStandings(year, gameCount)
 
   const allGameCompleted = standings.every(standing => standing.maxPoints === standing.points);
-
-  React.useEffect(() => {
-    if (standingsOverride) return;
-
-    const initializeLeaderboard = async () => {
-      try {
-        setLoading(true)
-        const initialStandings = await getStandings({ numGames: gameCount })
-        setStandings(initialStandings)
-      } catch (error) {
-        if (error instanceof Error) {
-          toast({ 
-            title: 'Error fetching initial data:', 
-            description: error.message, 
-            variant: 'destructive' 
-          })
-        } else {
-          toast({ 
-            title: 'Error fetching initial data', 
-            variant: 'destructive' 
-          })
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-    initializeLeaderboard()
-  }, [gameCount, standingsOverride])
   
   const displayStandings = standingsOverride || standings;
-  const isLoading = loadingProp || loading;
+  const isLoading = loadingProp || standingsLoading;
 
   if (displayStandings.length === 0 || isLoading) {
     return <LeaderboardSkeleton count={userCount ?? 5} />

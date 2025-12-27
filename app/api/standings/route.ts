@@ -223,8 +223,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Received predictions:', predictions, totalScorePrediction);
-
     // Get the predicted games with their names for point calculation
     const predictedGames: {
       id: string;

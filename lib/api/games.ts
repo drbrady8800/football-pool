@@ -72,6 +72,5 @@ export async function updateGames(): Promise<string> {
   }
   
   const data = await response.json();
-  console.log(data);
   return data['message'];
 }

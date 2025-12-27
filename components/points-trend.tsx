@@ -11,9 +11,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { toast } from "@/hooks/use-toast"
-import { getStandingsChartData } from "@/lib/api/standings"
-import { getUsers } from "@/lib/api/users"
+import { useYear } from "@/lib/contexts/year-context"
+import { useStandingsChart } from "@/lib/api/hooks/use-standings"
+import { useUsers } from "@/lib/api/hooks/use-users"
 import { type StandingChartColumn } from "@/lib/types"
 
 function ChartSkeleton({ miniture }: { miniture?: boolean }) {
@@ -82,14 +82,15 @@ interface PointsTrendProps {
 }
 
 export default function PointsTrend({ miniture, selectedPlayers }: PointsTrendProps) {
-  const [standingChartData, setStandingCartData] = React.useState<StandingChartColumn[]>()
+  const { year } = useYear()
+  const { data: standingChartData = [] } = useStandingsChart(year)
+  const { data: allUsers = [] } = useUsers(year)
   const [chartConfig, setChartConfig] = React.useState<ChartConfig>()
-  const [allUsers, setAllUsers] = React.useState<Array<{ id: string; name: string }>>([])
   const [key, setKey] = React.useState(0) // Key for forcing chart redraw
 
   // Calculate maxPoints considering selectedPlayers if defined
   const maxPoints = React.useMemo(() => 
-    standingChartData 
+    standingChartData.length > 0
       ? Math.max(...standingChartData.map(data => 
           Math.max(...Object.entries(data)
             .filter(([key]) => !selectedPlayers || selectedPlayers.includes(key))
@@ -97,36 +98,6 @@ export default function PointsTrend({ miniture, selectedPlayers }: PointsTrendPr
         )) 
       : 0
   , [standingChartData, selectedPlayers]);
-
-  // Initial data load - only fetch users and standings once
-  React.useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const [users, data] = await Promise.all([
-          getUsers(),
-          getStandingsChartData()
-        ]);
-        
-        setAllUsers(users);
-        setStandingCartData(data);
-      } catch (error) {
-        if (error instanceof Error) {
-          toast({ 
-            title: 'Error loading initial data:',
-            description: error.message,
-            variant: 'destructive'
-          })
-        } else {
-          toast({
-            title: 'Error loading initial data',
-            variant: 'destructive'
-          })
-        }
-      }
-    }
-
-    loadInitialData();
-  }, []);
 
   // Update chart config when selectedPlayers changes
   React.useEffect(() => {

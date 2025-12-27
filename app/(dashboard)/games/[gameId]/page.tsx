@@ -4,53 +4,24 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
-import { getGameById } from '@/lib/api/games';
-import { getPicks } from '@/lib/api/picks';
+import { useYear } from '@/lib/contexts/year-context';
+import { useGameById } from '@/lib/api/hooks/use-games';
+import { usePicks } from '@/lib/api/hooks/use-picks';
 import { GameCardSkeleton, InfoGameCard } from '@/components/game-card';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { type GameWithTeams, type PickWithGameTeamUser } from '@/db/types';
-import { toast } from '@/hooks/use-toast';
+import { type PickWithGameTeamUser } from '@/db/types';
 
 export default function GameIdPage({
   params,
 }: {
   params: { gameId: string };
 }) {
-  const [game, setGame] = React.useState<GameWithTeams | null>(null);
-  const [picks, setPicks] = React.useState<PickWithGameTeamUser[]>([]);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [gameData, picksData] = await Promise.all([
-          getGameById(params.gameId),
-          getPicks({ gameId: params.gameId })
-        ]);
-        setGame(gameData);
-        setPicks(picksData);
-      } catch (error) {
-        if (error instanceof Error) {
-          toast({ 
-            title: 'Error fetching game data:', 
-            description: error.message, 
-            variant: 'destructive' 
-          });
-        } else {
-          toast({ 
-            title: 'Error fetching game data', 
-            variant: 'destructive' 
-          });
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [params.gameId]);
+  const { year } = useYear()
+  const { data: game, isLoading: gameLoading } = useGameById(params.gameId, year)
+  const { data: picks = [], isLoading: picksLoading } = usePicks({ gameId: params.gameId, year })
+  
+  const loading = gameLoading || picksLoading;
 
   if (loading) {
     return (

@@ -14,31 +14,16 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import Leaderboard from "@/components/leaderboard"
-import { getGames } from "@/lib/api/games"
-import { toast } from "@/hooks/use-toast"
+import { useYear } from "@/lib/contexts/year-context"
+import { useGames } from "@/lib/api/hooks/use-games"
 
 export default function LeaderboardPage() {
+  const { year } = useYear()
+  const { data: games = [] } = useGames(year)
   const [gameCount, setGameCount] = React.useState<number | undefined>()
-  const [totalGames, setTotalGames] = React.useState(0)
   const [sortBy, setSortBy] = React.useState<'total' | 'max'>('total')
 
-  // Initial load
-  React.useEffect(() => {
-    const initializeLeaderboard = async () => {
-      try {
-        const total = (await getGames()).filter(game => game.isComplete).length
-        setTotalGames(total)
-      } catch (error) {
-        if (error instanceof Error) {
-          toast({ title: 'Error fetching initial data:', description: error.message, variant: 'destructive' })
-        } else {
-          toast({ title: 'Error fetching initial data', variant: 'destructive' })
-        }
-      }
-    }
-
-    initializeLeaderboard()
-  }, [])
+  const totalGames = games.filter(game => game.isComplete).length
   
   return (
     <Card className="w-full max-w-4xl mx-auto">
