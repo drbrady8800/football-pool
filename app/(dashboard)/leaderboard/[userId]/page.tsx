@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { type PickWithGameTeamUser } from '@/db/types';
 import { Badge } from '@/components/ui/badge';
@@ -9,8 +9,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PlayerGameCard, GameCardSkeleton } from '@/components/game-card';
 
 import { getEliminatedCFPTeams } from '@/lib/api/teams';
-import { getPicks } from '@/lib/api/picks';
-import { getStandings } from '@/lib/api/standings';
+import { useYear } from '@/lib/contexts/year-context';
+import { usePicks } from '@/lib/api/hooks/use-picks';
+import { useStandings } from '@/lib/api/hooks/use-standings';
 import { isLastPlace, isFirstPlace } from '@/lib/utils'; 
 
 function LoadingState() {
@@ -40,40 +41,35 @@ export default function PersonPage({
   params: { userId: string };
 }) {
   const userId = params.userId;
-  const [picks, setPicks] = useState<PickWithGameTeamUser[]>([]);
-  const [standings, setStandings] = useState<any[]>([]);
+  const { year } = useYear();
+  const { data: picksData = [], isLoading: picksLoading } = usePicks({ userId, year });
+  const { data: standingsData = [], isLoading: standingsLoading } = useStandings(year);
   const [eliminatedTeams, setEliminatedTeams] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Sort picks by game date
+  const picks = React.useMemo(() => {
+    return [...picksData].sort((a, b) => {
+      return a.game.gameDate < b.game.gameDate ? -1 : 1;
+    });
+  }, [picksData]);
+
+  const standings = standingsData;
+
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchEliminatedTeams = async () => {
       try {
-        setIsLoading(true);
-        const [picksData, standingsData, eliminatedTeamsData] = await Promise.all([
-          getPicks({ userId }),
-          getStandings({}),
-          getEliminatedCFPTeams(),
-        ]);
-
-        // Sort picks by game date
-        const sortedPicks = picksData?.sort((a, b) => {
-          return a.game.gameDate < b.game.gameDate ? -1 : 1;
-        });
-
-        setPicks(sortedPicks || []);
-        setStandings(standingsData || []);
+        const eliminatedTeamsData = await getEliminatedCFPTeams(year);
         setEliminatedTeams(eliminatedTeamsData || []);
       } catch (err) {
-        setError('Failed to load data');
-        console.error('Error fetching data:', err);
-      } finally {
-        setIsLoading(false);
+        console.error('Error fetching eliminated teams:', err);
       }
     };
 
-    fetchData();
-  }, [userId]);
+    fetchEliminatedTeams();
+  }, [year]);
+
+  const isLoading = picksLoading || standingsLoading;
 
   const userInfo = standings.find(standing => standing.userId === userId);
   const isInFirstPlace = userInfo ? isFirstPlace(userInfo, standings) : false;

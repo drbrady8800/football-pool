@@ -163,7 +163,6 @@ export default function MultiSelectClient({
             <CommandList>
               <CommandGroup>
                 {options.map((option) => {
-                  console.log(option)
                   const isSelected = selected.includes(option.value)
                   return (
                     <CommandItem

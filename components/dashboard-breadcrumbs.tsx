@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { capitalize } from 'lodash';
@@ -13,28 +13,13 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Skeleton } from '@/components/ui/skeleton';
-import { type GameWithTeams, type User } from '@/db/types';
-import { getGameById } from '@/lib/api/games';
-import { getUserById } from '@/lib/api/users';
+import { useYear } from '@/lib/contexts/year-context';
+import { useGameById } from '@/lib/api/hooks/use-games';
+import { useUserById } from '@/lib/api/hooks/use-users';
 
 function GameBreadcrumb({ gameId }: { gameId: string }) {
-  const [game, setGame] = useState<GameWithTeams | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchGame() {
-      try {
-        const response = await getGameById(gameId);
-        setGame(response);
-      } catch (error) {
-        console.error('Error fetching game:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchGame();
-  }, [gameId]);
+  const { year } = useYear();
+  const { data: game, isLoading } = useGameById(gameId, year);
 
   if (isLoading) {
     return <Skeleton className="h-4 w-20" />;
@@ -44,25 +29,8 @@ function GameBreadcrumb({ gameId }: { gameId: string }) {
 }
 
 function UserBreadcrumb({ userId }: { userId: string }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: user, isLoading } = useUserById(userId);
 
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const response = await getUserById(userId);
-        setUser(response);
-      } catch (error) {
-        console.error('Error fetching user:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchUser();
-  }, [userId]);
-
-  
   if (isLoading) {
     return <Skeleton className="h-4 w-20" />;
   }

@@ -7,49 +7,11 @@ import picks from '@/db/schema/picks';
 import teams from '@/db/schema/teams';
 import { teamsByYear } from '@/db/consts'
 import { parseDate, getGamePointValue } from '@/lib/utils';
-import { Game } from '../types';
+import { Game } from '@/db/types';
+import { fetchPostseasonGames } from '@/lib/api/external';
 
-interface GameApiResponse {
-  id: number;
-  season: number;
-  week: number;
-  season_type: string;
-  start_date: string;
-  start_time_tbd: boolean;
-  completed: boolean;
-  neutral_site: boolean;
-  conference_game: boolean;
-  attendance: number;
-  venue_id: number;
-  venue: string;
-  
-  // Home team data
-  home_id: number;
-  home_team: string;
-  home_conference: string;
-  home_division: string;
-  home_points: number;
-  home_line_scores: number[];
-  home_post_win_prob: number;
-  home_pregame_elo: number;
-  home_postgame_elo: number;
-  
-  // Away team data
-  away_id: number;
-  away_team: string;
-  away_conference: string;
-  away_division: string;
-  away_points: number;
-  away_line_scores: number[];
-  away_post_win_prob: number;
-  away_pregame_elo: number;
-  away_postgame_elo: number;
-  
-  // Game metadata
-  excitement_index: number;
-  highlights: string;
-  notes: string;
-}
+// Import the type from external module
+type GameApiResponse = Awaited<ReturnType<typeof fetchPostseasonGames>>[number];
 
 interface GameApiTransformed {
   name: string;
@@ -77,43 +39,25 @@ async function getTeamId(teamName: string): Promise<string> {
   return result[0].id;
 }
 
-// Function to fetch teams from the API
-async function fetchPostseasonGames(year: number): Promise<GameApiResponse[]> {
-  const response = await fetch(
-    `https://api.collegefootballdata.com/games?year=${year}&seasonType=postseason`,
-    {
-      headers: {
-        'accept': 'application/json',
-        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_COLLEGE_FOOTBALL_DATA_API_KEY}`
-      }
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch teams: ${response.statusText}`);
-  }
-
-  return response.json() as Promise<GameApiResponse[]>;
-}
 
 // Function to transform API data to match our schema
 async function transformGameData(apiGame: GameApiResponse) {
   // Get team IDs concurrently
   const [homeTeamId, awayTeamId] = await Promise.all([
-    getTeamId(apiGame.home_team),
-    getTeamId(apiGame.away_team)
+    getTeamId(apiGame.homeTeam),
+    getTeamId(apiGame.awayTeam)
   ]);
 
   // Determine winning team
   let winningTeamId = null;
-  if (apiGame.home_points > apiGame.away_points) {
+  if (apiGame.homePoints > apiGame.awayPoints) {
     winningTeamId = homeTeamId;
-  } else if (apiGame.home_points < apiGame.away_points) {
+  } else if (apiGame.homePoints < apiGame.awayPoints) {
     winningTeamId = awayTeamId;
   }
 
   // Parse the date string into a proper Date object
-  const gameDate = parseDate(apiGame.start_date);
+  const gameDate = parseDate(apiGame.startDate);
 
   return {
     name: apiGame.notes,
@@ -121,8 +65,8 @@ async function transformGameData(apiGame: GameApiResponse) {
     awayTeamId,
     gameDate,
     winningTeamId,
-    homeTeamScore: apiGame.home_points,
-    awayTeamScore: apiGame.away_points,
+    homeTeamScore: apiGame.homePoints,
+    awayTeamScore: apiGame.awayPoints,
     isComplete: apiGame.completed,
     season: apiGame.season,
   };
@@ -160,8 +104,8 @@ export async function ingestGames({ year }: {year: number }): Promise<string> {
   
   // Filter relevant games
   const apiTeamsFiltered = apiGames.filter(game => 
-    teamsForGivenYear.includes(game.home_team) && 
-    teamsForGivenYear.includes(game.away_team)
+    teamsForGivenYear.includes(game.homeTeam) && 
+    teamsForGivenYear.includes(game.awayTeam)
   );
 
   // Process games in smaller batches
@@ -218,8 +162,8 @@ export async function updateGames({ year }: {year: number }): Promise<string> {
   
   // Filter relevant games
   const apiTeamsFiltered = apiGames.filter(game => 
-    teamsForGivenYear.includes(game.home_team) && 
-    teamsForGivenYear.includes(game.away_team)
+    teamsForGivenYear.includes(game.homeTeam) && 
+    teamsForGivenYear.includes(game.awayTeam)
   );
 
 

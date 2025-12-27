@@ -22,8 +22,17 @@ type GameResult = {
   cumulativePoints: number;
 };
 
-export async function GET() {
-  const season = getBowlYear();
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const yearParam = searchParams.get('year');
+  const season = yearParam ? parseInt(yearParam, 10) : getBowlYear();
+  
+  if (isNaN(season)) {
+    return Response.json(
+      { error: 'Invalid year parameter' },
+      { status: 400 }
+    );
+  }
 
   try {
     // Alias tables for home and away teams

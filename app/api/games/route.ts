@@ -7,9 +7,19 @@ import { getBowlYear } from "@/lib/utils";
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const year = getBowlYear();
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : getBowlYear();
+    
+    if (isNaN(year)) {
+      return Response.json(
+        { error: 'Invalid year parameter' },
+        { status: 400 }
+      );
+    }
+    
     const gamesResult = await db.query.games.findMany({
       where: eq(games.season, year),
       with: {
@@ -35,10 +45,20 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const year = getBowlYear();
-    const message = await ingestGames({ year: year});
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : getBowlYear();
+    
+    if (isNaN(year)) {
+      return Response.json(
+        { error: 'Invalid year parameter' },
+        { status: 400 }
+      );
+    }
+    
+    const message = await ingestGames({ year: year });
 
     return Response.json(
       { message },
@@ -57,9 +77,19 @@ export async function POST() {
   }
 }
 
-export async function PUT() {
+export async function PUT(request: Request) {
   try {
-    const year = getBowlYear();
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : getBowlYear();
+    
+    if (isNaN(year)) {
+      return Response.json(
+        { error: 'Invalid year parameter' },
+        { status: 400 }
+      );
+    }
+    
     const message = await updateGames({ year: year });
 
     return Response.json(

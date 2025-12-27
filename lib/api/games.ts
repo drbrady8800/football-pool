@@ -1,8 +1,12 @@
 import { type GameWithTeams } from '@/db/types';
 import { getApiUrl } from '@/lib/utils';
 
-export async function getGames(): Promise<GameWithTeams[]> {
-  const response = await fetch(`${getApiUrl()}/games`, {
+export async function getGames(year?: number): Promise<GameWithTeams[]> {
+  const url = year 
+    ? `${getApiUrl()}/games?year=${year}`
+    : `${getApiUrl()}/games`;
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -17,8 +21,12 @@ export async function getGames(): Promise<GameWithTeams[]> {
   return data["games"];
 }
 
-export async function getGameById(id: string): Promise<GameWithTeams> {
-  const response = await fetch(`${getApiUrl()}/games/${id}`, {
+export async function getGameById(id: string, year?: number): Promise<GameWithTeams> {
+  const url = year
+    ? `${getApiUrl()}/games/${id}?year=${year}`
+    : `${getApiUrl()}/games/${id}`;
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -33,8 +41,12 @@ export async function getGameById(id: string): Promise<GameWithTeams> {
   return data["games"];
 }
 
-export async function ingestGames(): Promise<string> {
-  const response = await fetch(`${getApiUrl()}/games`, {
+export async function ingestGames(year?: number): Promise<string> {
+  const url = year
+    ? `${getApiUrl()}/games?year=${year}`
+    : `${getApiUrl()}/games`;
+  
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -50,8 +62,12 @@ export async function ingestGames(): Promise<string> {
   return data['message'];
 }
 
-export async function updateGames(): Promise<string> {
-  const response = await fetch(`${getApiUrl()}/games`, {
+export async function updateGames(year?: number): Promise<string> {
+  const url = year
+    ? `${getApiUrl()}/games?year=${year}`
+    : `${getApiUrl()}/games`;
+  
+  const response = await fetch(url, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -64,6 +80,5 @@ export async function updateGames(): Promise<string> {
   }
   
   const data = await response.json();
-  console.log(data);
   return data['message'];
 }

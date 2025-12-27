@@ -1,8 +1,13 @@
 import { type Standing, type StandingChartColumn } from "@/lib/types";
 import { getApiUrl } from '@/lib/utils';
 
-export async function getStandings({ numGames }: { numGames?: number }): Promise<Standing[]> {
-  const response = await fetch(`${getApiUrl()}/standings${numGames ? `?numGames=${numGames}` : ''}`, {
+export async function getStandings({ numGames, year }: { numGames?: number; year?: number }): Promise<Standing[]> {
+  const searchParams = new URLSearchParams();
+  if (numGames) searchParams.append('numGames', numGames.toString());
+  if (year) searchParams.append('year', year.toString());
+  
+  const queryString = searchParams.toString();
+  const response = await fetch(`${getApiUrl()}/standings${queryString ? `?${queryString}` : ''}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -17,8 +22,12 @@ export async function getStandings({ numGames }: { numGames?: number }): Promise
   return data["standings"];
 }
 
-export async function getStandingsChartData(): Promise<StandingChartColumn[]> {
-  const response = await fetch(`${getApiUrl()}/standings/all`, {
+export async function getStandingsChartData(year?: number): Promise<StandingChartColumn[]> {
+  const url = year
+    ? `${getApiUrl()}/standings/all?year=${year}`
+    : `${getApiUrl()}/standings/all`;
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -33,13 +42,13 @@ export async function getStandingsChartData(): Promise<StandingChartColumn[]> {
   return data;
 }
 
-export async function getHypotheticalStandings(predictions: Record<string, string>, totalScorePrediction?: number): Promise<Standing[]> {
+export async function getHypotheticalStandings(predictions: Record<string, string>, totalScorePrediction?: number, year?: number): Promise<Standing[]> {
   const response = await fetch(`${getApiUrl()}/standings`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ predictions, totalScorePrediction }),
+    body: JSON.stringify({ predictions, totalScorePrediction, year }),
   });
 
   if (!response.ok) {

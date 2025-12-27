@@ -1,5 +1,7 @@
+import { Suspense } from 'react';
 import DashboardBreadcrumbs from '@/components/dashboard-breadcrumbs';
 import { DesktopNav, MobileNav } from '@/components/navigation';
+import { YearSelector } from '@/components/year-selector';
 
 import { Analytics } from '@vercel/analytics/react';
 import { User } from './user';
@@ -20,9 +22,9 @@ export default function DashboardLayout({
               <MobileNav />
               <DashboardBreadcrumbs />
             </div>
-            {/* <div>
-              <User />
-            </div> */}
+            <div>
+              <YearSelector />
+            </div>
           </header>
           <main className="grid flex-1 items-start gap-2 p-4 sm:px-6 sm:py-0 md:gap-4 bg-muted/40">
             {children}

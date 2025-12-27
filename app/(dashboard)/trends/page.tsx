@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card"
 import PointsTrend from "@/components/points-trend"
 import MultiSelect from "@/components/multi-select"
-import { getUsers } from "@/lib/api/users"
+import { useUsers } from "@/lib/api/hooks/use-users"
 
 interface Player {
   value: string
@@ -17,26 +17,22 @@ interface Player {
 };
 
 export default function StatsPage() {
+  const { data: users = [] } = useUsers()
   const [selectedPlayers, setSelectedPlayers] = React.useState<string[]>([])
-  const [players, setPlayers] = React.useState<Player[]>([])
+  
+  const players = React.useMemo(() => {
+    return users.map(user => ({
+      value: user.id,
+      label: user.name
+    }))
+  }, [users])
   
   React.useEffect(() => {
-    const loadPlayers = async () => {
-      try {
-        const users = await getUsers()
-        setPlayers(users.map(user => ({
-          value: user.id,
-          label: user.name
-        })))
-        // Initially select all players
-        setSelectedPlayers(users.map(user => user.id))
-      } catch (error) {
-        console.error('Error loading players:', error)
-      }
+    if (users.length > 0 && selectedPlayers.length === 0) {
+      // Initially select all players
+      setSelectedPlayers(users.map(user => user.id))
     }
-    
-    loadPlayers()
-  }, [])
+  }, [users, selectedPlayers])
 
   return (
     <Card>

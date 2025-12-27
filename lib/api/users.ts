@@ -2,7 +2,9 @@ import { type User } from '@/db/types';
 import { getApiUrl } from '@/lib/utils';
 
 export async function getUsers(): Promise<User[]> {
-  const response = await fetch(`${getApiUrl()}/users`, {
+  const url = `${getApiUrl()}/users`;
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -18,7 +20,9 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function getUserById(userId: string): Promise<User> {
-  const response = await fetch(`${getApiUrl()}/users/${userId}`, {
+  const url = `${getApiUrl()}/users/${userId}`;
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
