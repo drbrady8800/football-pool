@@ -8,47 +8,10 @@ import teams from '@/db/schema/teams';
 import { teamsByYear } from '@/db/consts'
 import { parseDate, getGamePointValue } from '@/lib/utils';
 import { Game } from '../types';
+import { fetchPostseasonGames } from '@/lib/api/external';
 
-interface GameApiResponse {
-  id: number;
-  season: number;
-  week: number;
-  seasonType: string;
-  startDate: string;
-  startTimeTBD: boolean;
-  completed: boolean;
-  neutralSite: boolean;
-  conferenceGame: boolean;
-  attendance: number;
-  venueId: number;
-  venue: string;
-  
-  // Home team data
-  homeId: number;
-  homeTeam: string;
-  homeConference: string;
-  homeClassification: string;
-  homePoints: number;
-  homeLineScores: number[];
-  homePostgameWinProbability: number;
-  homePregameElo: number;
-  homePostgameElo: number;
-  
-  // Away team data
-  awayId: number;
-  awayTeam: string;
-  awayConference: string;
-  awayPoints: number;
-  awayLineScores: number[];
-  awayPostgameWinProbability: number;
-  awayPregameElo: number;
-  awayPostgameElo: number;
-  
-  // Game metadata
-  excitementIndex: number;
-  highlights: string;
-  notes: string;
-}
+// Import the type from external module
+type GameApiResponse = Awaited<ReturnType<typeof fetchPostseasonGames>>[number];
 
 interface GameApiTransformed {
   name: string;
@@ -76,24 +39,6 @@ async function getTeamId(teamName: string): Promise<string> {
   return result[0].id;
 }
 
-// Function to fetch teams from the API
-async function fetchPostseasonGames(year: number): Promise<GameApiResponse[]> {
-  const response = await fetch(
-    `https://api.collegefootballdata.com/games?year=${year}&seasonType=postseason&classification=fbs`,
-    {
-      headers: {
-        'accept': 'application/json',
-        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_COLLEGE_FOOTBALL_DATA_API_KEY}`
-      }
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch teams: ${response.statusText}`);
-  }
-
-  return response.json() as Promise<GameApiResponse[]>;
-}
 
 // Function to transform API data to match our schema
 async function transformGameData(apiGame: GameApiResponse) {

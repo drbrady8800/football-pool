@@ -5,6 +5,7 @@ import db from '@/db/db';
 import teams from '@/db/schema/teams';
 
 import { getBowlYear } from "@/lib/utils";
+import { fetchTeams } from '@/lib/api/external';
 
 interface VenueLocation {
   venue_id: number;
@@ -23,40 +24,8 @@ interface VenueLocation {
   dome: boolean;
 }
 
-interface TeamApiResponse {
-  id: number;
-  school: string;
-  mascot: string;
-  abbreviation: string;
-  alternateNames: string[];
-  classification: string;
-  conference: string;
-  division: string;
-  color: string;
-  alternateColor: string;
-  logos: string[];
-  twitter: string;
-  location: VenueLocation;
-}
-
-// Function to fetch teams from the API
-async function fetchTeams(): Promise<TeamApiResponse[]> {
-  const response = await fetch(
-    `https://api.collegefootballdata.com/teams/fbs?year=${String(getBowlYear())}`,
-    {
-      headers: {
-        'accept': 'application/json',
-        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_COLLEGE_FOOTBALL_DATA_API_KEY}`
-      }
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch teams: ${response.statusText}`);
-  }
-
-  return response.json() as Promise<TeamApiResponse[]>;
-}
+// Import the type from external module
+type TeamApiResponse = Awaited<ReturnType<typeof fetchTeams>>[number];
 
 // Function to transform API data to match our schema
 function transformTeamData(apiTeam: TeamApiResponse) {
@@ -82,7 +51,8 @@ export async function ingestTeams(): Promise<string> {
   }
 
   // Fetch teams from the API
-  const apiTeams = await fetchTeams();
+  const year = getBowlYear();
+  const apiTeams = await fetchTeams(year);
 
   // Transform and insert teams
   const transformedTeams = apiTeams.map(transformTeamData);
@@ -94,7 +64,8 @@ export async function ingestTeams(): Promise<string> {
 
 export async function updateTeams(): Promise<string> {
   // Fetch teams from the API
-  const apiTeams = await fetchTeams();
+  const year = getBowlYear();
+  const apiTeams = await fetchTeams(year);
 
   // Transform teams
   const transformedTeams = apiTeams.map(transformTeamData);
