@@ -53,8 +53,17 @@ async function _calculateScorePredictionPoints(season: number, totalScore: numbe
 }
 
 export async function GET(request: NextRequest) {
-  const season = getBowlYear();
   const searchParams = request.nextUrl.searchParams;
+  const yearParam = searchParams.get('year');
+  const season = yearParam ? parseInt(yearParam, 10) : getBowlYear();
+  
+  if (isNaN(season)) {
+    return Response.json(
+      { error: 'Invalid year parameter' },
+      { status: 400 }
+    );
+  }
+  
   const numGames = searchParams.get('numGames') ? parseInt(searchParams.get('numGames')!) : null;
 
   try {
@@ -203,8 +212,16 @@ type PredictionsPayload = {
 
 export async function POST(request: NextRequest) {
   try {
-    const season = getBowlYear();
-    const { predictions, totalScorePrediction } = await request.json() as PredictionsPayload;
+    const body = await request.json() as PredictionsPayload & { year?: number };
+    const { predictions, totalScorePrediction, year: yearParam } = body;
+    const season = yearParam ? yearParam : getBowlYear();
+    
+    if (isNaN(season)) {
+      return Response.json(
+        { error: 'Invalid year parameter' },
+        { status: 400 }
+      );
+    }
 
     console.log('Received predictions:', predictions, totalScorePrediction);
 

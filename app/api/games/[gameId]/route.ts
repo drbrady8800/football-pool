@@ -12,7 +12,17 @@ export async function GET(
   { params }: { params: { gameId: string } }
 ) {
   try {
-    const year = getBowlYear();
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : getBowlYear();
+    
+    if (isNaN(year)) {
+      return Response.json(
+        { error: 'Invalid year parameter' },
+        { status: 400 }
+      );
+    }
+    
     const game = await db.query.games.findFirst({
       where: and(eq(games.id, params.gameId), eq(games.season, year)),
       with: {

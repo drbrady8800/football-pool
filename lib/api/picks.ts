@@ -4,6 +4,7 @@ import { getApiUrl } from '@/lib/utils';
 interface FetchPicksOptions {
   gameId?: string;
   userId?: string;
+  year?: number;
 };
 
 export async function getPicks(options: FetchPicksOptions): Promise<PickWithGameTeamUser[]> {
@@ -11,8 +12,8 @@ export async function getPicks(options: FetchPicksOptions): Promise<PickWithGame
   
   // Add parameters if they exist
   Object.entries(options).forEach(([key, value]) => {
-    if (value) {
-      searchParams.append(key, value);
+    if (value !== undefined && value !== null) {
+      searchParams.append(key, value.toString());
     }
   });
 

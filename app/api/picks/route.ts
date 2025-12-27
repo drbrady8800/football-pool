@@ -10,8 +10,16 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const year = getBowlYear();
     const searchParams = request.nextUrl.searchParams;
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : getBowlYear();
+    
+    if (isNaN(year)) {
+      return Response.json(
+        { error: 'Invalid year parameter' },
+        { status: 400 }
+      );
+    }
 
     // Build conditions array starting with the base condition
     const conditions = [eq(picks.season, year)];
