@@ -7,7 +7,7 @@ import picks from '@/db/schema/picks';
 import teams from '@/db/schema/teams';
 import { teamsByYear } from '@/db/consts'
 import { parseDate, getGamePointValue } from '@/lib/utils';
-import { Game } from '../types';
+import { Game } from '@/db/types';
 import { fetchPostseasonGames } from '@/lib/api/external';
 
 // Import the type from external module

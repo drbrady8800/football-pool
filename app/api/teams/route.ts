@@ -1,9 +1,22 @@
 import { updateTeams, ingestTeams } from "@/db/utils/ingest-teams"
+import { getBowlYear } from "@/lib/utils";
+
 export const dynamic = 'force-dynamic';
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const message = await ingestTeams();
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : getBowlYear();
+    
+    if (isNaN(year)) {
+      return Response.json(
+        { error: 'Invalid year parameter' },
+        { status: 400 }
+      );
+    }
+    
+    const message = await ingestTeams(year);
     
     return Response.json(
       { message },
@@ -21,9 +34,20 @@ export async function POST() {
   }
 }
 
-export async function PUT() {
+export async function PUT(request: Request) {
   try {
-    const message = await updateTeams();
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : getBowlYear();
+    
+    if (isNaN(year)) {
+      return Response.json(
+        { error: 'Invalid year parameter' },
+        { status: 400 }
+      );
+    }
+    
+    const message = await updateTeams(year);
     
     return Response.json(
       { message },

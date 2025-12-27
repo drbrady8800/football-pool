@@ -35,11 +35,15 @@ export async function getPicks(options: FetchPicksOptions): Promise<PickWithGame
   return data["picks"];
 }
 
-export async function ingestPicks(file: File): Promise<string> {
+export async function ingestPicks(file: File, year?: number): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${getApiUrl()}/picks`, {
+  const url = year
+    ? `${getApiUrl()}/picks?year=${year}`
+    : `${getApiUrl()}/picks`;
+
+  const response = await fetch(url, {
     method: 'POST',
     body: formData,
   });

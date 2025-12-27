@@ -29,7 +29,7 @@ export default function HomePage() {
   const router = useRouter()
   const { year } = useYear()
   const { data: allGames = [], isLoading: gamesLoading } = useGames(year)
-  const { data: users = [], isLoading: usersLoading } = useUsers(year)
+  const { data: users = [], isLoading: usersLoading } = useUsers()
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null)
 
   React.useEffect(() => {

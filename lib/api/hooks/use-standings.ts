@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { getStandings, getStandingsChartData, getHypotheticalStandings } from '../standings';
+import { getStandings, getStandingsChartData, getHypotheticalStandings } from '@/lib/api/standings';
 import { type Standing, type StandingChartColumn } from '@/lib/types';
 
 export function useStandings(year: number, numGames?: number) {

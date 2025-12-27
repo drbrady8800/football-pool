@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card"
 import PointsTrend from "@/components/points-trend"
 import MultiSelect from "@/components/multi-select"
-import { useYear } from "@/lib/contexts/year-context"
 import { useUsers } from "@/lib/api/hooks/use-users"
 
 interface Player {
@@ -18,8 +17,7 @@ interface Player {
 };
 
 export default function StatsPage() {
-  const { year } = useYear()
-  const { data: users = [] } = useUsers(year)
+  const { data: users = [] } = useUsers()
   const [selectedPlayers, setSelectedPlayers] = React.useState<string[]>([])
   
   const players = React.useMemo(() => {

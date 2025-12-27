@@ -59,7 +59,7 @@ export default function PersonPage({
   useEffect(() => {
     const fetchEliminatedTeams = async () => {
       try {
-        const eliminatedTeamsData = await getEliminatedCFPTeams();
+        const eliminatedTeamsData = await getEliminatedCFPTeams(year);
         setEliminatedTeams(eliminatedTeamsData || []);
       } catch (err) {
         console.error('Error fetching eliminated teams:', err);
@@ -67,7 +67,7 @@ export default function PersonPage({
     };
 
     fetchEliminatedTeams();
-  }, []);
+  }, [year]);
 
   const isLoading = picksLoading || standingsLoading;
 

@@ -41,8 +41,12 @@ export async function getGameById(id: string, year?: number): Promise<GameWithTe
   return data["games"];
 }
 
-export async function ingestGames(): Promise<string> {
-  const response = await fetch(`${getApiUrl()}/games`, {
+export async function ingestGames(year?: number): Promise<string> {
+  const url = year
+    ? `${getApiUrl()}/games?year=${year}`
+    : `${getApiUrl()}/games`;
+  
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -58,8 +62,12 @@ export async function ingestGames(): Promise<string> {
   return data['message'];
 }
 
-export async function updateGames(): Promise<string> {
-  const response = await fetch(`${getApiUrl()}/games`, {
+export async function updateGames(year?: number): Promise<string> {
+  const url = year
+    ? `${getApiUrl()}/games?year=${year}`
+    : `${getApiUrl()}/games`;
+  
+  const response = await fetch(url, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

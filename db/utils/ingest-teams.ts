@@ -4,7 +4,6 @@ import fetch from 'node-fetch';
 import db from '@/db/db';
 import teams from '@/db/schema/teams';
 
-import { getBowlYear } from "@/lib/utils";
 import { fetchTeams } from '@/lib/api/external';
 
 interface VenueLocation {
@@ -43,7 +42,7 @@ function transformTeamData(apiTeam: TeamApiResponse) {
 }
 
 // Main function to process and insert teams
-export async function ingestTeams(): Promise<string> {
+export async function ingestTeams(year: number): Promise<string> {
   // Make sure the table is empty
   const teamsTableCountResult = await db.select({ count: count() }).from(teams);
   if (teamsTableCountResult[0].count > 0) {
@@ -51,7 +50,6 @@ export async function ingestTeams(): Promise<string> {
   }
 
   // Fetch teams from the API
-  const year = getBowlYear();
   const apiTeams = await fetchTeams(year);
 
   // Transform and insert teams
@@ -62,9 +60,8 @@ export async function ingestTeams(): Promise<string> {
   return `Successfully inserted ${transformedTeams.length} teams!`;
 }
 
-export async function updateTeams(): Promise<string> {
+export async function updateTeams(year: number): Promise<string> {
   // Fetch teams from the API
-  const year = getBowlYear();
   const apiTeams = await fetchTeams(year);
 
   // Transform teams

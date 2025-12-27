@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { getPicks } from '../picks';
+import { getPicks } from '@/lib/api/picks';
 import { type PickWithGameTeamUser } from '@/db/types';
 
 interface UsePicksOptions {
-  gameId?: string;
+  gameId?: string;  
   userId?: string;
   year: number;
   enabled?: boolean;

@@ -14,7 +14,6 @@ import {
 import { useYear } from "@/lib/contexts/year-context"
 import { useStandingsChart } from "@/lib/api/hooks/use-standings"
 import { useUsers } from "@/lib/api/hooks/use-users"
-import { type StandingChartColumn } from "@/lib/types"
 
 function ChartSkeleton({ miniture }: { miniture?: boolean }) {
   return (
@@ -84,7 +83,7 @@ interface PointsTrendProps {
 export default function PointsTrend({ miniture, selectedPlayers }: PointsTrendProps) {
   const { year } = useYear()
   const { data: standingChartData = [] } = useStandingsChart(year)
-  const { data: allUsers = [] } = useUsers(year)
+  const { data: allUsers = [] } = useUsers()
   const [chartConfig, setChartConfig] = React.useState<ChartConfig>()
   const [key, setKey] = React.useState(0) // Key for forcing chart redraw
 

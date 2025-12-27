@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getGames, getGameById } from '../games';
+import { getGames, getGameById } from '@/lib/api/games';
 import { type GameWithTeams } from '@/db/types';
 
 export function useGames(year: number) {

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
+import { useYear } from '@/lib/contexts/year-context';
 import { ingestTeams, updateTeams } from '@/lib/api/teams';
 import { ingestGames, updateGames } from '@/lib/api/games';
 import { ingestPicks } from '@/lib/api/picks';
@@ -59,6 +60,7 @@ const LoadingButton = ({ action, text, loadingText, disabled = false }: LoadingB
 };
 
 export default function AdminPage() {
+  const { year } = useYear();
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,25 +73,41 @@ export default function AdminPage() {
     if (!selectedFile) {
       throw new Error("Please select a CSV file first");
     }
-    return ingestPicks(selectedFile);
+    return ingestPicks(selectedFile, year);
+  };
+
+  const handleIngestTeams = async () => {
+    return ingestTeams(year);
+  };
+
+  const handleUpdateTeams = async () => {
+    return updateTeams(year);
+  };
+
+  const handleIngestGames = async () => {
+    return ingestGames(year);
+  };
+
+  const handleUpdateGames = async () => {
+    return updateGames(year);
   };
 
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
         <CardTitle>Admin Actions</CardTitle>
-        <CardDescription>Manage system data and operations</CardDescription>
+        <CardDescription>Manage system data and operations for {year}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 align-center">
         <h2 className="text-lg font-semibold">Teams</h2>
         <div className="flex flex-grow gap-4 align-center">
           <LoadingButton 
-            action={ingestTeams}
+            action={handleIngestTeams}
             text="Ingest Teams"
             loadingText="Ingesting Teams"
           />
           <LoadingButton 
-            action={updateTeams}
+            action={handleUpdateTeams}
             text="Update Teams"
             loadingText="Updating Teams"
           />
@@ -97,12 +115,12 @@ export default function AdminPage() {
         <h2 className="text-lg font-semibold">Games</h2>
         <div className="flex flex-grow gap-4 align-center">
           <LoadingButton 
-            action={ingestGames}
+            action={handleIngestGames}
             text="Ingest Games"
             loadingText="Ingesting Games"
           />
           <LoadingButton 
-            action={updateGames}
+            action={handleUpdateGames}
             text="Update Games"
             loadingText="Updating Games"
           />

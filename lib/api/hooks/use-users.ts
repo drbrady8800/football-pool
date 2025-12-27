@@ -1,18 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import { getUsers, getUserById } from '../users';
+import { getUsers, getUserById } from '@/lib/api/users';
 import { type User } from '@/db/types';
 
-export function useUsers(year: number) {
+export function useUsers() {
   return useQuery<User[]>({
-    queryKey: ['users', year],
-    queryFn: () => getUsers(year),
+    queryKey: ['users'],
+    queryFn: () => getUsers(),
   });
 }
 
-export function useUserById(userId: string, year: number) {
+export function useUserById(userId: string) {
   return useQuery<User>({
-    queryKey: ['users', userId, year],
-    queryFn: () => getUserById(userId, year),
+    queryKey: ['users', userId],
+    queryFn: () => getUserById(userId),
     enabled: !!userId,
   });
 }

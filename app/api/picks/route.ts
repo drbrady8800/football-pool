@@ -66,7 +66,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
-    const year = getBowlYear();
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : getBowlYear();
+    
+    if (isNaN(year)) {
+      return Response.json(
+        { error: 'Invalid year parameter' },
+        { status: 400 }
+      );
+    }
+    
     const formData = await request.formData();
     const file = formData.get('file') as File;
     

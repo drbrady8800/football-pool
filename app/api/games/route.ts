@@ -45,9 +45,19 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const year = getBowlYear();
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : getBowlYear();
+    
+    if (isNaN(year)) {
+      return Response.json(
+        { error: 'Invalid year parameter' },
+        { status: 400 }
+      );
+    }
+    
     const message = await ingestGames({ year: year });
 
     return Response.json(
@@ -67,9 +77,19 @@ export async function POST() {
   }
 }
 
-export async function PUT() {
+export async function PUT(request: Request) {
   try {
-    const year = getBowlYear();
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : getBowlYear();
+    
+    if (isNaN(year)) {
+      return Response.json(
+        { error: 'Invalid year parameter' },
+        { status: 400 }
+      );
+    }
+    
     const message = await updateGames({ year: year });
 
     return Response.json(

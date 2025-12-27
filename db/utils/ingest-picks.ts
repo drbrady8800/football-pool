@@ -1,8 +1,6 @@
 import { eq, and, asc, or, like } from "drizzle-orm";
 import { parse } from 'csv-parse/sync';
 
-import { getBowlYear } from "@/lib/utils";
-
 import db from "@/db/db";
 import games from "@/db/schema/games";
 import picks from "@/db/schema/picks";
@@ -37,8 +35,9 @@ function processCFPPicks(
   teamMap: Map<string, string>,
   cfpGames: Game[],
   userName: string,
+  year: number,
 ): { winningTeamId: string; losingTeamId: string; gameId: string }[] {
-  const cfpStructure = cfpStructureByYear[String(getBowlYear())];
+  const cfpStructure = cfpStructureByYear[String(year)];
   const picks: { winningTeamId: string; losingTeamId: string; gameId: string }[] = [];
   const pickTracker: PickTracker = {};
 
@@ -141,7 +140,7 @@ export async function ingestPicks({ year, csvContent }: { year: number, csvConte
     .from(games)
     .where(and(
       like(games.name, "%College Football Playoff%"),
-      eq(games.season, getBowlYear())
+      eq(games.season, year)
     ))
     .orderBy(asc(games.gameDate));
 
@@ -228,7 +227,7 @@ export async function ingestPicks({ year, csvContent }: { year: number, csvConte
       cfpPicksByGame[pickNumber] = teamName;
     }
 
-    const cfpPicks = processCFPPicks(cfpPicksByGame, teamMap, cfpGames, userName);
+    const cfpPicks = processCFPPicks(cfpPicksByGame, teamMap, cfpGames, userName, year);
     picksToInsert.push(...cfpPicks.map(pick => ({
       userId,
       gameId: pick.gameId,
@@ -243,6 +242,12 @@ export async function ingestPicks({ year, csvContent }: { year: number, csvConte
     }
     scoresToInsert.push({ userId, score });
   }
+
+  // Delete existing picks for this year before inserting new ones
+  await db.delete(picks).where(eq(picks.season, year));
+  
+  // Delete existing score predictions for this year before inserting new ones
+  await db.delete(scorePredictions).where(eq(scorePredictions.season, year));
 
   // Batch insert all picks
   await db.insert(picks).values(picksToInsert.map(pick => ({

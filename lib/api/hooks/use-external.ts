@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchPostseasonGames, fetchTeams, type GameApiResponse, type TeamApiResponse } from '../external';
+import { fetchPostseasonGames, fetchTeams, type GameApiResponse, type TeamApiResponse } from '@/lib/api/external';
 
 export type { GameApiResponse, TeamApiResponse };
 

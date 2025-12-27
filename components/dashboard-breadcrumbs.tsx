@@ -29,8 +29,7 @@ function GameBreadcrumb({ gameId }: { gameId: string }) {
 }
 
 function UserBreadcrumb({ userId }: { userId: string }) {
-  const { year } = useYear();
-  const { data: user, isLoading } = useUserById(userId, year);
+  const { data: user, isLoading } = useUserById(userId);
 
   if (isLoading) {
     return <Skeleton className="h-4 w-20" />;

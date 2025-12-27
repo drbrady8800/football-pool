@@ -1,7 +1,11 @@
 import { getApiUrl } from '@/lib/utils';
 
-export async function ingestTeams(): Promise<string> {
-  const response = await fetch(`${getApiUrl()}/teams`, {
+export async function ingestTeams(year?: number): Promise<string> {
+  const url = year
+    ? `${getApiUrl()}/teams?year=${year}`
+    : `${getApiUrl()}/teams`;
+  
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -17,8 +21,12 @@ export async function ingestTeams(): Promise<string> {
   return data['message'];
 }
 
-export async function updateTeams():  Promise<string> {
-  const response = await fetch(`${getApiUrl()}/teams`, {
+export async function updateTeams(year?: number):  Promise<string> {
+  const url = year
+    ? `${getApiUrl()}/teams?year=${year}`
+    : `${getApiUrl()}/teams`;
+  
+  const response = await fetch(url, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -34,8 +42,12 @@ export async function updateTeams():  Promise<string> {
   return data['message'];
 }
 
-export async function getEliminatedCFPTeams():  Promise<string[]> {
-  const response = await fetch(`${getApiUrl()}/games`, {
+export async function getEliminatedCFPTeams(year?: number):  Promise<string[]> {
+  const url = year
+    ? `${getApiUrl()}/games?year=${year}`
+    : `${getApiUrl()}/games`;
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
