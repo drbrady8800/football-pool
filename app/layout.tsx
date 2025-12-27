@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Analytics } from '@vercel/analytics/react';
 import { QueryProvider } from '@/lib/providers/query-provider';
 import { YearProvider } from '@/lib/contexts/year-context';
+import { Suspense } from 'react';
 
 export const metadata = {
   title: "Big George's Football Pool",
@@ -20,9 +21,11 @@ export default function RootLayout({
     <html lang="en">
       <body className="flex min-h-screen w-full flex-col">
         <QueryProvider>
-          <YearProvider>
-            {children}
-          </YearProvider>
+          <Suspense fallback={null}>
+            <YearProvider>
+              {children}
+            </YearProvider>
+          </Suspense>
         </QueryProvider>
         <Toaster />
         <Analytics />
