@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 import { type Standing } from "@/lib/types"
-import { type GameWithTeams, type PickWithGameTeamUser } from "@/db/types";
+import { type PickWithGameTeamUser } from "@/db/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

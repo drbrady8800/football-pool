@@ -38,7 +38,7 @@ export async function GET() {
 export async function POST() {
   try {
     const year = getBowlYear();
-    const message = await ingestGames({ year: year});
+    const message = await ingestGames({ year: year });
 
     return Response.json(
       { message },

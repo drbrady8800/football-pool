@@ -4,19 +4,21 @@ import fetch from 'node-fetch';
 import db from '@/db/db';
 import teams from '@/db/schema/teams';
 
+import { getBowlYear } from "@/lib/utils";
+
 interface VenueLocation {
   venue_id: number;
   name: string;
   city: string;
   state: string;
   zip: string;
-  country_code: string;
+  countryCode: string;
   timezone: string;
   latitude: number;
   longitude: number;
-  elevation: number;
+  elevation: string;
   capacity: number;
-  year_constructed: number;
+  constructionYear: number;
   grass: boolean;
   dome: boolean;
 }
@@ -26,14 +28,12 @@ interface TeamApiResponse {
   school: string;
   mascot: string;
   abbreviation: string;
-  alt_name_1: string;
-  alt_name_2: string;
-  alt_name_3: string;
+  alternateNames: string[];
   classification: string;
   conference: string;
   division: string;
   color: string;
-  alt_color: string;
+  alternateColor: string;
   logos: string[];
   twitter: string;
   location: VenueLocation;
@@ -42,7 +42,7 @@ interface TeamApiResponse {
 // Function to fetch teams from the API
 async function fetchTeams(): Promise<TeamApiResponse[]> {
   const response = await fetch(
-    'https://api.collegefootballdata.com/teams/fbs?year=2024',
+    `https://api.collegefootballdata.com/teams/fbs?year=${String(getBowlYear())}`,
     {
       headers: {
         'accept': 'application/json',
@@ -67,7 +67,7 @@ function transformTeamData(apiTeam: TeamApiResponse) {
     conference: apiTeam.conference || "None",
     division: apiTeam.division || "None",
     primaryColor: apiTeam.color || '#000000',
-    secondaryColor: apiTeam.alt_color || '#FFFFFF',
+    secondaryColor: apiTeam.alternateColor || '#FFFFFF',
     logoUrl: apiTeam.logos?.[0] || '',
     location: apiTeam.location,
   };
